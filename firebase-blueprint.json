@@ -1,0 +1,97 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "displayName", "role"]
+    },
+    "Workspace": {
+      "title": "Workspace",
+      "description": "A workspace for organizing projects",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "members": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "ownerId"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A project containing multiple studies",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "workspaceId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "workspaceId", "ownerId"]
+    },
+    "Study": {
+      "title": "Study",
+      "description": "A test study with tasks and questions",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["prototype", "survey", "website", "task"] },
+        "status": { "type": "string", "enum": ["draft", "active", "completed"] },
+        "tasks": { "type": "array" },
+        "questions": { "type": "array" },
+        "config": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "type", "status", "ownerId"]
+    },
+    "Response": {
+      "title": "Response",
+      "description": "A participant response to a study",
+      "type": "object",
+      "properties": {
+        "studyId": { "type": "string" },
+        "participantId": { "type": "string" },
+        "results": { "type": "array" },
+        "metrics": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studyId", "results", "metrics"]
+    },
+    "Participant": {
+      "title": "Participant",
+      "description": "A participant in a study",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "status": { "type": "string", "enum": ["invited", "completed", "active"] },
+        "assignedStudyId": { "type": "string" },
+        "completionRate": { "type": "number" },
+        "timeTaken": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastActive": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "ownerId", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/workspaces/{workspaceId}": { "schema": "Workspace", "description": "Workspaces" },
+    "/projects/{projectId}": { "schema": "Project", "description": "Projects" },
+    "/studies/{studyId}": { "schema": "Study", "description": "Studies" },
+    "/responses/{responseId}": { "schema": "Response", "description": "Participant responses" },
+    "/participants/{participantId}": { "schema": "Participant", "description": "Participants" }
+  }
+}

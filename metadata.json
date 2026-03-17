@@ -1,0 +1,8 @@
+{
+  "name": "InsightQA",
+  "description": "AI-powered QA & User Testing Platform for product teams to run usability tests and analyze results with AI.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

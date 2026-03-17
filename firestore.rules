@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "nandinijam0@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return data.keys().hasOnly(['email', 'displayName', 'photoURL', 'role', 'createdAt']) &&
+             (data.email == null || data.email is string) && 
+             data.displayName is string &&
+             data.role in ['admin', 'user'];
+    }
+
+    function isValidWorkspace(data) {
+      return data.keys().hasOnly(['name', 'ownerId', 'members', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.ownerId is string;
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasOnly(['name', 'description', 'workspaceId', 'ownerId', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.workspaceId is string && data.ownerId is string;
+    }
+
+    function isValidStudy(data) {
+      return data.keys().hasOnly(['projectId', 'ownerId', 'title', 'type', 'status', 'tasks', 'questions', 'config', 'createdAt']) &&
+             (data.projectId == null || data.projectId is string) && 
+             data.ownerId is string &&
+             data.title is string &&
+             data.type in ['prototype', 'survey', 'website', 'task'] &&
+             data.status in ['draft', 'active', 'completed'];
+    }
+
+    function isValidResponse(data) {
+      return data.keys().hasOnly(['studyId', 'ownerId', 'participantId', 'results', 'metrics', 'createdAt']) &&
+             data.studyId is string &&
+             data.ownerId is string;
+    }
+
+    function isValidParticipant(data) {
+      return data.keys().hasAll(['email', 'ownerId', 'status']) &&
+             data.keys().hasOnly(['email', 'name', 'ownerId', 'status', 'assignedStudyId', 'completionRate', 'timeTaken', 'createdAt', 'lastActive']) &&
+             data.email is string &&
+             data.ownerId is string &&
+             data.status in ['invited', 'completed', 'active'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && 
+                      request.resource.data.role == resource.data.role;
+    }
+
+    match /workspaces/{workspaceId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || request.auth.uid in resource.data.members);
+      allow create: if isAuthenticated() && isValidWorkspace(request.resource.data) && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.ownerId) && isValidWorkspace(request.resource.data);
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.ownerId);
+    }
+
+    match /projects/{projectId} {
+      allow read: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidProject(request.resource.data) && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.ownerId == request.auth.uid && isValidProject(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /studies/{studyId} {
+      allow read: if true; // Publicly readable for participants
+      allow create: if isAuthenticated() && isValidStudy(request.resource.data) && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.ownerId == request.auth.uid && isValidStudy(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /responses/{responseId} {
+      allow read: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow create: if isValidResponse(request.resource.data); // Participants can submit
+      allow update: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /participants/{participantId} {
+      allow read: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow create: if isValidParticipant(request.resource.data); // Anyone can signup
+      allow update: if (isAuthenticated() && resource.data.ownerId == request.auth.uid) || 
+                      (isValidParticipant(request.resource.data) && 
+                       request.resource.data.ownerId == resource.data.ownerId &&
+                       request.resource.data.email == resource.data.email);
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+  }
+}
