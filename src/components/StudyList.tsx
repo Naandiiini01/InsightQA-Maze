@@ -34,6 +34,9 @@ export const StudyList: React.FC<{ onSelectStudy: (study: Study) => void, onRunT
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setStudies(data);
       setLoading(false);
+    }, (error) => {
+      console.error("StudyList Studies Listener Error:", error);
+      setLoading(false);
     });
 
     // Fetch response counts for each study - filtered by ownerId
@@ -48,6 +51,8 @@ export const StudyList: React.FC<{ onSelectStudy: (study: Study) => void, onRunT
         counts[studyId] = (counts[studyId] || 0) + 1;
       });
       setResponseCounts(counts);
+    }, (error) => {
+      console.error("StudyList Responses Listener Error:", error);
     });
 
     return () => {

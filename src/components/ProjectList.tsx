@@ -31,6 +31,9 @@ export const ProjectList: React.FC<{ setActiveTab: (tab: string) => void }> = ({
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setProjects(data);
       setLoading(false);
+    }, (error) => {
+      console.error("ProjectList Projects Listener Error:", error);
+      setLoading(false);
     });
 
     const qStudies = query(
@@ -40,6 +43,8 @@ export const ProjectList: React.FC<{ setActiveTab: (tab: string) => void }> = ({
     const unsubscribeStudies = onSnapshot(qStudies, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Study));
       setStudies(data);
+    }, (error) => {
+      console.error("ProjectList Studies Listener Error:", error);
     });
 
     return () => {

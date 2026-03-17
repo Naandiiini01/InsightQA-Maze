@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { db, auth } from '../firebase';
-import { collection, addDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
 import { StudyType, Task, Question, Project } from '../types';
 import { 
   Save, 
@@ -27,10 +27,15 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
 
   React.useEffect(() => {
     if (!auth.currentUser) return;
-    const q = collection(db, 'projects');
+    const q = query(
+      collection(db, 'projects'),
+      where('ownerId', '==', auth.currentUser.uid)
+    );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
       setProjects(data);
+    }, (error) => {
+      console.error("Firestore Error (Projects):", error);
     });
     return () => unsubscribe();
   }, []);
@@ -55,27 +60,41 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
     setQuestions([...questions, newQuestion]);
   };
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSave = async () => {
-    if (!title) return alert("Please enter a study title");
-    if (!auth.currentUser) return alert("Please sign in to save studies");
+    if (!auth.currentUser) {
+      setError("Please sign in to save studies");
+      return;
+    }
+
+    if (!title.trim()) {
+      setError("Please enter a study title");
+      return;
+    }
     
     setSaving(true);
+    setError(null);
     try {
-      await addDoc(collection(db, 'studies'), {
-        title,
+      const studyData = {
+        title: title.trim(),
         type,
-        projectId,
+        projectId: projectId || null,
         ownerId: auth.currentUser.uid,
-        tasks,
-        questions,
-        status: 'draft',
+        tasks: tasks.map(t => ({ ...t, title: t.title || 'Untitled Task' })),
+        questions: questions.map(q => ({ ...q, text: q.text || 'Untitled Question' })),
+        status: 'draft' as const,
         config: { showTimer: true },
-        prototypeUrl,
+        prototypeUrl: prototypeUrl.trim() || '',
         createdAt: new Date().toISOString()
-      });
+      };
+
+      console.log('Attempting to save study:', studyData);
+      await addDoc(collection(db, 'studies'), studyData);
       onComplete();
-    } catch (error) {
-      console.error("Save Error:", error);
+    } catch (err: any) {
+      console.error("Save Error:", err);
+      setError(err.message || "Failed to save study. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -263,6 +282,9 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
                         onChange={(e) => {
                           const newQs = [...questions];
                           newQs[idx].type = e.target.value as any;
+                          if (newQs[idx].type === 'mcq' && !newQs[idx].options) {
+                            newQs[idx].options = ['Option 1'];
+                          }
                           setQuestions(newQs);
                         }}
                       >
@@ -282,6 +304,53 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
                         Required
                       </label>
                     </div>
+
+                    {q.type === 'mcq' && (
+                      <div className="space-y-2 pl-8">
+                        <label className="text-xs font-bold text-[#6C757D] uppercase">Options</label>
+                        {q.options?.map((opt, optIdx) => (
+                          <div key={optIdx} className="flex items-center gap-2">
+                            <input 
+                              type="text"
+                              value={opt}
+                              onChange={(e) => {
+                                const newQs = [...questions];
+                                if (newQs[idx].options) {
+                                  newQs[idx].options![optIdx] = e.target.value;
+                                  setQuestions(newQs);
+                                }
+                              }}
+                              className="flex-1 p-2 bg-[#F8F9FA] border border-[#E9ECEF] rounded-lg text-sm"
+                              placeholder={`Option ${optIdx + 1}`}
+                            />
+                            <button 
+                              onClick={() => {
+                                const newQs = [...questions];
+                                if (newQs[idx].options && newQs[idx].options!.length > 1) {
+                                  newQs[idx].options = newQs[idx].options!.filter((_, i) => i !== optIdx);
+                                  setQuestions(newQs);
+                                }
+                              }}
+                              className="text-[#ADB5BD] hover:text-[#DC3545]"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+                        <button 
+                          onClick={() => {
+                            const newQs = [...questions];
+                            if (newQs[idx].options) {
+                              newQs[idx].options!.push(`Option ${newQs[idx].options!.length + 1}`);
+                              setQuestions(newQs);
+                            }
+                          }}
+                          className="text-sm text-[#0066FF] font-bold hover:underline flex items-center gap-1"
+                        >
+                          <Plus size={14} /> Add Option
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -291,31 +360,39 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
       </div>
 
       {/* Footer Controls */}
-      <div className="p-6 bg-[#F8F9FA] border-t border-[#E9ECEF] flex justify-between items-center">
-        <button 
-          onClick={() => setStep(Math.max(1, step - 1))}
-          disabled={step === 1}
-          className="flex items-center gap-2 px-6 py-2 text-[#495057] font-bold disabled:opacity-30"
-        >
-          <ChevronLeft size={20} /> Back
-        </button>
-        
-        {step < 3 ? (
-          <button 
-            onClick={() => setStep(step + 1)}
-            className="flex items-center gap-2 px-8 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold hover:bg-black transition-all"
-          >
-            Continue <ChevronRight size={20} />
-          </button>
-        ) : (
-          <button 
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 px-8 py-3 bg-[#0066FF] text-white rounded-xl font-bold hover:bg-[#0052CC] transition-all shadow-lg shadow-blue-200 disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Finish & Save'} <Save size={20} />
-          </button>
+      <div className="p-6 bg-[#F8F9FA] border-t border-[#E9ECEF] space-y-4">
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-100 text-red-600 text-sm font-medium rounded-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+            <span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span>
+            {error}
+          </div>
         )}
+        <div className="flex justify-between items-center">
+          <button 
+            onClick={() => setStep(Math.max(1, step - 1))}
+            disabled={step === 1}
+            className="flex items-center gap-2 px-6 py-2 text-[#495057] font-bold disabled:opacity-30"
+          >
+            <ChevronLeft size={20} /> Back
+          </button>
+          
+          {step < 3 ? (
+            <button 
+              onClick={() => setStep(step + 1)}
+              className="flex items-center gap-2 px-8 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold hover:bg-black transition-all"
+            >
+              Continue <ChevronRight size={20} />
+            </button>
+          ) : (
+            <button 
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-8 py-3 bg-[#0066FF] text-white rounded-xl font-bold hover:bg-[#0052CC] transition-all shadow-lg shadow-blue-200 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Finish & Save'} <Save size={20} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

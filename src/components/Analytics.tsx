@@ -42,6 +42,9 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StudyResponse));
       setResponses(data);
       setLoading(false);
+    }, (error) => {
+      console.error("Analytics Responses Listener Error:", error);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, [study.id]);

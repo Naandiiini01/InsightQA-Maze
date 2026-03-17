@@ -46,6 +46,9 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
         .slice(0, 5);
       setStudies(data);
       setLoading(false);
+    }, (error) => {
+      console.error("Dashboard Studies Listener Error:", error);
+      setLoading(false);
     });
 
     // Fetch all studies for count
@@ -56,6 +59,8 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
     const unsubscribeStats = onSnapshot(qAllStudies, (snapshot) => {
       const activeCount = snapshot.docs.filter(d => d.data().status === 'active').length;
       setStatsData(prev => ({ ...prev, activeStudies: activeCount }));
+    }, (error) => {
+      console.error("Dashboard Stats Listener Error:", error);
     });
 
     // Fetch responses for participants count - filtered by ownerId
@@ -83,6 +88,8 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
         avgSuccessRate: countWithMetrics > 0 ? Math.round(totalSuccess / countWithMetrics) : 0,
         insightsGenerated: prev.activeStudies * 3 // Use current activeStudies
       }));
+    }, (error) => {
+      console.error("Dashboard Responses Listener Error:", error);
     });
 
     return () => {
