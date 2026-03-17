@@ -281,38 +281,76 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
                 className="flex-1 bg-white relative cursor-crosshair overflow-hidden"
                 onClick={trackClick}
               >
-                {/* Simulated Prototype View */}
-                <div className="absolute inset-0 flex items-center justify-center p-12">
-                  <div className="w-full h-full border-4 border-dashed border-[#DEE2E6] rounded-3xl flex flex-col items-center justify-center text-center p-8">
-                    <AlertCircle size={48} className="text-[#ADB5BD] mb-4" />
-                    <h4 className="text-xl font-bold text-[#1A1A1A]">Interactive Prototype Area</h4>
-                    <p className="text-[#6C757D] mt-2">In a real study, your Figma or website URL would load here.</p>
-                    <button 
-                      className="mt-8 px-8 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTaskComplete(true);
-                      }}
-                    >
-                      I've completed the task
-                    </button>
-                    <button 
-                      className="mt-4 text-[#6C757D] font-medium hover:underline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTaskComplete(false);
-                      }}
-                    >
-                      I'm stuck / skip task
-                    </button>
-                  </div>
+                {/* Interactive Prototype View */}
+                <div className="absolute inset-0">
+                  {study.prototypeUrl ? (
+                    <div className="w-full h-full flex flex-col">
+                      <iframe 
+                        src={study.prototypeUrl.includes('figma.com') 
+                          ? `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(study.prototypeUrl)}`
+                          : study.prototypeUrl
+                        }
+                        className="w-full h-full border-none"
+                        allowFullScreen
+                      />
+                      {/* Overlay to capture clicks for heatmap while still allowing interaction? 
+                          Actually, iframes swallow clicks. To capture clicks, we'd need a transparent overlay,
+                          but that would block interaction with the prototype.
+                          For now, let's just show the prototype. If they click the "Complete" button, we record it.
+                      */}
+                      <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
+                        <button 
+                          className="px-6 py-2 bg-[#1A1A1A] text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-transform"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTaskComplete(true);
+                          }}
+                        >
+                          Task Completed
+                        </button>
+                        <button 
+                          className="px-6 py-2 bg-white text-[#6C757D] border border-[#E9ECEF] rounded-xl font-bold shadow-sm hover:bg-[#F8F9FA]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTaskComplete(false);
+                          }}
+                        >
+                          Skip Task
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 border-4 border-dashed border-[#DEE2E6] rounded-3xl m-4">
+                      <AlertCircle size={48} className="text-[#ADB5BD] mb-4" />
+                      <h4 className="text-xl font-bold text-[#1A1A1A]">Interactive Prototype Area</h4>
+                      <p className="text-[#6C757D] mt-2">No prototype URL was provided for this study.</p>
+                      <button 
+                        className="mt-8 px-8 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTaskComplete(true);
+                        }}
+                      >
+                        I've completed the task
+                      </button>
+                      <button 
+                        className="mt-4 text-[#6C757D] font-medium hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTaskComplete(false);
+                        }}
+                      >
+                        I'm stuck / skip task
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {/* Click Indicators (Visual Feedback) */}
+                {/* Click Indicators (Visual Feedback) - Only visible if not blocked by iframe */}
                 {clicks.map((c, i) => (
                   <div 
                     key={i} 
-                    className="absolute w-4 h-4 bg-[#0066FF]/30 border border-[#0066FF] rounded-full -translate-x-1/2 -translate-y-1/2 animate-ping"
+                    className="absolute w-4 h-4 bg-[#0066FF]/30 border border-[#0066FF] rounded-full -translate-x-1/2 -translate-y-1/2 animate-ping pointer-events-none z-20"
                     style={{ left: `${c.x}%`, top: `${c.y}%` }}
                   />
                 ))}

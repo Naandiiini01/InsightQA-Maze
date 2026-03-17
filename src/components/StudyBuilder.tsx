@@ -17,6 +17,7 @@ import {
 export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
+  const [prototypeUrl, setPrototypeUrl] = useState('');
   const [type, setType] = useState<StudyType>('prototype');
   const [projectId, setProjectId] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -69,6 +70,7 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
         questions,
         status: 'draft',
         config: { showTimer: true },
+        prototypeUrl,
         createdAt: new Date().toISOString()
       });
       onComplete();
@@ -107,6 +109,20 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
                 placeholder="e.g. Checkout Flow Usability Test"
                 className="w-full p-4 bg-[#F8F9FA] border border-[#E9ECEF] rounded-xl focus:ring-2 focus:ring-[#0066FF] outline-none transition-all text-lg"
               />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-[#495057] uppercase tracking-wide mb-2">Prototype / Website URL</label>
+              <input 
+                type="url" 
+                value={prototypeUrl}
+                onChange={(e) => setPrototypeUrl(e.target.value)}
+                placeholder="e.g. https://www.figma.com/proto/..."
+                className="w-full p-4 bg-[#F8F9FA] border border-[#E9ECEF] rounded-xl focus:ring-2 focus:ring-[#0066FF] outline-none transition-all text-lg"
+              />
+              <p className="text-xs text-[#6C757D] mt-2 italic">
+                * For Figma, make sure the prototype is set to "Anyone with the link can view".
+              </p>
             </div>
             
             <div>

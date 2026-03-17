@@ -41,7 +41,7 @@ service cloud.firestore {
     }
 
     function isValidStudy(data) {
-      return data.keys().hasOnly(['projectId', 'ownerId', 'title', 'type', 'status', 'tasks', 'questions', 'config', 'createdAt']) &&
+      return data.keys().hasOnly(['projectId', 'ownerId', 'title', 'type', 'status', 'tasks', 'questions', 'config', 'prototypeUrl', 'createdAt']) &&
              (data.projectId == null || data.projectId is string) && 
              data.ownerId is string &&
              data.title is string &&

@@ -12,7 +12,7 @@ import { ParticipantFlow } from './components/ParticipantFlow';
 import { Analytics } from './components/Analytics';
 import { Participants } from './components/Participants';
 import { Study, Participant } from './types';
-import { Users, X, Check, ChevronDown } from 'lucide-react';
+import { Users, X, Check, ChevronDown, Mail } from 'lucide-react';
 import { getShareableUrl, copyToClipboard } from './utils/url';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -254,7 +254,7 @@ export default function App() {
                 {sendSuccess ? (
                   <div className="p-3 bg-green-50 text-green-700 rounded-xl text-sm font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
                     <Check size={16} />
-                    Invitation sent successfully!
+                    Participant added successfully!
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -280,8 +280,8 @@ export default function App() {
                             createdAt: new Date().toISOString()
                           });
 
-                          // Simulate sending delay
-                          await new Promise(resolve => setTimeout(resolve, 1000));
+                          // Simulate delay
+                          await new Promise(resolve => setTimeout(resolve, 800));
                           
                           setIsSending(false);
                           setSendSuccess(true);
@@ -291,11 +291,11 @@ export default function App() {
                           setTimeout(() => {
                             setSendSuccess(false);
                             setShowRecruitModal(false);
-                          }, 2000);
+                          }, 1500);
                         } catch (err) {
                           console.error(err);
                           setIsSending(false);
-                          alert('Failed to send invitation');
+                          alert('Failed to add participant');
                         }
                       }}
                       className="w-full py-3 bg-[#1A1A1A] text-white rounded-xl font-bold hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -303,15 +303,19 @@ export default function App() {
                       {isSending ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Sending...</span>
+                          <span>Submitting...</span>
                         </>
                       ) : (
-                        <span>Send Invitation</span>
+                        <span>Submit</span>
                       )}
                     </button>
                     
                     <button 
                       onClick={async () => {
+                        if (!inviteEmail) {
+                          alert('Please enter an email address first');
+                          return;
+                        }
                         const url = getShareableUrl(`?recruit=true${selectedStudyId ? `&studyId=${selectedStudyId}` : ''}`);
                         
                         // Save as invited before opening mail client
@@ -330,9 +334,10 @@ export default function App() {
                         window.location.href = `mailto:${inviteEmail}?subject=${subject}&body=${body}`;
                         setShowRecruitModal(false);
                       }}
-                      className="w-full py-2 text-xs font-bold text-[#6C757D] hover:text-[#1A1A1A] transition-colors"
+                      className="w-full py-2 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors flex items-center justify-center gap-2"
                     >
-                      Or open in your email client
+                      <Mail size={14} />
+                      Send via your Email Client
                     </button>
                   </div>
                 )}

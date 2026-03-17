@@ -51,6 +51,7 @@
         "tasks": { "type": "array" },
         "questions": { "type": "array" },
         "config": { "type": "object" },
+        "prototypeUrl": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "type", "status", "ownerId"]

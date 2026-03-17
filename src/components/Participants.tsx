@@ -336,9 +336,25 @@ export const Participants: React.FC<ParticipantsProps> = ({ onRecruit, user }) =
                       </p>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 text-[#ADB5BD] hover:text-[#1A1A1A] transition-colors">
-                        <MoreVertical size={18} />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {p.status === 'invited' && (
+                          <button 
+                            onClick={() => {
+                              const url = window.location.origin + `?recruit=true${p.assignedStudyId ? `&studyId=${p.assignedStudyId}` : ''}`;
+                              navigator.clipboard.writeText(url);
+                              alert('Invite link copied to clipboard!');
+                            }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold"
+                            title="Copy Invite Link"
+                          >
+                            <Mail size={14} />
+                            <span>Copy Link</span>
+                          </button>
+                        )}
+                        <button className="p-2 text-[#ADB5BD] hover:text-[#1A1A1A] transition-colors">
+                          <MoreVertical size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

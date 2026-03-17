@@ -60,6 +60,7 @@ export interface Study {
     allowMicrophone?: boolean;
     showTimer?: boolean;
   };
+  prototypeUrl?: string;
   createdAt: string;
 }
 
