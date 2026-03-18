@@ -74,40 +74,80 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
       setError("Please enter a study title");
       return;
     }
+
+    if ((type === 'prototype' || type === 'website') && !prototypeUrl.trim()) {
+      setError("Please enter a prototype or website URL");
+      return;
+    }
+
+    if (tasks.length > 0 && tasks.some(t => !t.title.trim())) {
+      setError("Please enter a title for all tasks");
+      return;
+    }
+
+    if (tasks.length > 0 && tasks.some(t => !t.instructions.trim())) {
+      setError("Please enter instructions for all tasks");
+      return;
+    }
+
+    if (questions.length > 0 && questions.some(q => !q.text.trim())) {
+      setError("Please enter text for all questions");
+      return;
+    }
+
+    if (questions.some(q => q.type === 'mcq' && (!q.options || q.options.length === 0 || q.options.some(opt => !opt.trim())))) {
+      setError("Please provide at least one non-empty option for all multiple choice questions");
+      return;
+    }
     
     setSaving(true);
     setError(null);
-    try {
-      const studyData = {
-        title: title.trim(),
-        type,
-        projectId: projectId || null,
-        ownerId: auth.currentUser.uid,
-        tasks: tasks.map(t => ({ 
-          id: t.id,
-          title: t.title || 'Untitled Task',
-          instructions: t.instructions || '',
-          successPath: t.successPath || ''
-        })),
-        questions: questions.map(q => ({ 
-          id: q.id,
-          text: q.text || 'Untitled Question',
-          type: q.type,
-          required: q.required,
-          options: q.options || []
-        })),
-        status: 'draft' as const,
-        config: { showTimer: true },
-        prototypeUrl: prototypeUrl.trim() || '',
-        createdAt: new Date().toISOString()
-      };
 
-      console.log('Attempting to save study:', studyData);
-      await addDoc(collection(db, 'studies'), studyData);
+    const studyData = {
+      title: title.trim(),
+      type,
+      projectId: projectId || null,
+      ownerId: auth.currentUser.uid,
+      tasks: tasks.map(t => ({ 
+        id: t.id,
+        title: t.title || 'Untitled Task',
+        instructions: t.instructions || '',
+        successPath: t.successPath || ''
+      })),
+      questions: questions.map(q => ({ 
+        id: q.id,
+        text: q.text || 'Untitled Question',
+        type: q.type,
+        required: q.required,
+        options: q.options || []
+      })),
+      status: 'draft' as const,
+      config: { showTimer: true },
+      prototypeUrl: prototypeUrl.trim() || '',
+      createdAt: new Date().toISOString()
+    };
+
+    console.log('Current User:', auth.currentUser?.uid);
+    console.log('Attempting to save study:', studyData);
+    
+    try {
+      const docRef = await addDoc(collection(db, 'studies'), studyData);
+      console.log('Study saved with ID:', docRef.id);
       onComplete();
     } catch (err: any) {
       console.error("Save Error:", err);
-      handleFirestoreError(err, OperationType.CREATE, 'studies');
+      // Try to get a friendly message from our helper
+      try {
+        handleFirestoreError(err, OperationType.CREATE, 'studies');
+      } catch (e: any) {
+        // If it's our JSON error, parse it for a better message
+        try {
+          const parsed = JSON.parse(e.message);
+          setError(`Permission Error: ${parsed.error}. Please check all fields.`);
+        } catch {
+          setError(e.message || "Failed to save study. Please check your permissions.");
+        }
+      }
     } finally {
       setSaving(false);
     }
@@ -133,7 +173,9 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div>
-              <label className="block text-sm font-bold text-[#495057] uppercase tracking-wide mb-2">Study Title</label>
+              <label className="block text-sm font-bold text-[#495057] uppercase tracking-wide mb-2">
+                Study Title <span className="text-[#DC3545]">*</span>
+              </label>
               <input 
                 type="text" 
                 value={title}
@@ -144,7 +186,9 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
             </div>
             
             <div>
-              <label className="block text-sm font-bold text-[#495057] uppercase tracking-wide mb-2">Prototype / Website URL</label>
+              <label className="block text-sm font-bold text-[#495057] uppercase tracking-wide mb-2">
+                Prototype / Website URL {(type === 'prototype' || type === 'website') && <span className="text-[#DC3545]">*</span>}
+              </label>
               <input 
                 type="url" 
                 value={prototypeUrl}
@@ -223,28 +267,38 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
                     </button>
                     <div className="flex items-center gap-3">
                       <span className="w-8 h-8 bg-[#0066FF] text-white rounded-full flex items-center justify-center font-bold text-sm">{idx + 1}</span>
-                      <input 
-                        type="text" 
-                        placeholder="Task Title (e.g. Find the login button)"
-                        className="flex-1 font-bold text-lg outline-none"
-                        value={task.title}
+                      <div className="flex-1">
+                        <label className="block text-[10px] font-bold text-[#6C757D] uppercase tracking-widest mb-1">
+                          Task Title <span className="text-[#DC3545]">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Find the login button"
+                          className="w-full font-bold text-lg outline-none"
+                          value={task.title}
+                          onChange={(e) => {
+                            const newTasks = [...tasks];
+                            newTasks[idx].title = e.target.value;
+                            setTasks(newTasks);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[#6C757D] uppercase tracking-widest pl-1">
+                        Instructions <span className="text-[#DC3545]">*</span>
+                      </label>
+                      <textarea 
+                        placeholder="Instructions for the participant..."
+                        className="w-full p-4 bg-[#F8F9FA] rounded-xl outline-none min-h-[100px]"
+                        value={task.instructions}
                         onChange={(e) => {
                           const newTasks = [...tasks];
-                          newTasks[idx].title = e.target.value;
+                          newTasks[idx].instructions = e.target.value;
                           setTasks(newTasks);
                         }}
                       />
                     </div>
-                    <textarea 
-                      placeholder="Instructions for the participant..."
-                      className="w-full p-4 bg-[#F8F9FA] rounded-xl outline-none min-h-[100px]"
-                      value={task.instructions}
-                      onChange={(e) => {
-                        const newTasks = [...tasks];
-                        newTasks[idx].instructions = e.target.value;
-                        setTasks(newTasks);
-                      }}
-                    />
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-[#6C757D] uppercase tracking-widest pl-1">Success Screen / Path (Optional)</label>
                       <input 
@@ -290,17 +344,22 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
                     </button>
                     <div className="flex items-center gap-3">
                       <Type size={20} className="text-[#0066FF]" />
-                      <input 
-                        type="text" 
-                        placeholder="Question text..."
-                        className="flex-1 font-bold outline-none"
-                        value={q.text}
-                        onChange={(e) => {
-                          const newQs = [...questions];
-                          newQs[idx].text = e.target.value;
-                          setQuestions(newQs);
-                        }}
-                      />
+                      <div className="flex-1">
+                        <label className="block text-[10px] font-bold text-[#6C757D] uppercase tracking-widest mb-1">
+                          Question Text <span className="text-[#DC3545]">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. How easy was it to complete this task?"
+                          className="w-full font-bold outline-none"
+                          value={q.text}
+                          onChange={(e) => {
+                            const newQs = [...questions];
+                            newQs[idx].text = e.target.value;
+                            setQuestions(newQs);
+                          }}
+                        />
+                      </div>
                     </div>
                     <div className="flex gap-4">
                       <select 
@@ -334,7 +393,9 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
 
                     {q.type === 'mcq' && (
                       <div className="space-y-2 pl-8">
-                        <label className="text-xs font-bold text-[#6C757D] uppercase">Options</label>
+                        <label className="text-xs font-bold text-[#6C757D] uppercase">
+                          Options <span className="text-[#DC3545]">*</span>
+                        </label>
                         {q.options?.map((opt, optIdx) => (
                           <div key={optIdx} className="flex items-center gap-2">
                             <input 

@@ -22,9 +22,10 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   user: User;
   onSignOut: () => void;
+  onNewProject: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user, onSignOut }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user, onSignOut, onNewProject }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: Folder },
@@ -45,13 +46,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user,
           <span className="text-xl font-bold tracking-tight">InsightQA</span>
         </div>
 
-        <button 
-          onClick={() => setActiveTab('create-study')}
-          className="w-full py-2.5 px-4 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors mb-8 shadow-sm"
-        >
-          <PlusCircle size={18} />
-          New Study
-        </button>
+        <div className="flex flex-col gap-2 mb-8">
+          <button 
+            onClick={() => setActiveTab('create-study')}
+            className="w-full py-2.5 px-4 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-sm"
+          >
+            <PlusCircle size={18} />
+            New Study
+          </button>
+          <button 
+            onClick={onNewProject}
+            className="w-full py-2.5 px-4 bg-white border border-[#E9ECEF] hover:bg-[#F8F9FA] text-[#495057] rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-sm"
+          >
+            <Folder size={18} />
+            New Project
+          </button>
+        </div>
 
         <nav className="space-y-1">
           {navItems.map((item) => (

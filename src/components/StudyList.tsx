@@ -13,7 +13,11 @@ import {
   Check
 } from 'lucide-react';
 
-export const StudyList: React.FC<{ onSelectStudy: (study: Study) => void, onRunTest: (studyId: string) => void }> = ({ onSelectStudy, onRunTest }) => {
+export const StudyList: React.FC<{ 
+  onSelectStudy: (study: Study) => void, 
+  onRunTest: (studyId: string) => void,
+  onCreateStudy: () => void
+}> = ({ onSelectStudy, onRunTest, onCreateStudy }) => {
   const [studies, setStudies] = useState<Study[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -172,9 +176,15 @@ export const StudyList: React.FC<{ onSelectStudy: (study: Study) => void, onRunT
       </div>
 
       {studies.length === 0 && (
-        <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#E9ECEF]">
+        <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#E9ECEF] flex flex-col items-center">
           <h3 className="text-xl font-bold text-[#1A1A1A]">No studies found</h3>
-          <p className="text-[#6C757D] mt-2">Create your first study to start collecting user insights.</p>
+          <p className="text-[#6C757D] mt-2 mb-8">Create your first study to start collecting user insights.</p>
+          <button 
+            onClick={onCreateStudy}
+            className="flex items-center gap-2 px-8 py-4 bg-[#0066FF] text-white rounded-2xl font-bold hover:bg-[#0052CC] transition-all shadow-lg shadow-blue-100"
+          >
+            <Play size={20} className="fill-current" /> Create New Study
+          </button>
         </div>
       )}
     </div>

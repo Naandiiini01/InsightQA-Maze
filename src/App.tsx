@@ -8,6 +8,7 @@ import { Dashboard } from './components/Dashboard';
 import { StudyBuilder } from './components/StudyBuilder';
 import { StudyList } from './components/StudyList';
 import { ProjectList } from './components/ProjectList';
+import { ProjectModal } from './components/ProjectModal';
 import { ParticipantFlow } from './components/ParticipantFlow';
 import { Analytics } from './components/Analytics';
 import { Participants } from './components/Participants';
@@ -38,6 +39,7 @@ export default function App() {
   const [sendSuccess, setSendSuccess] = useState(false);
 
   const [isParticipantMode, setIsParticipantMode] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -107,14 +109,15 @@ export default function App() {
 
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard setActiveTab={setActiveTab} />;
+        return <Dashboard setActiveTab={setActiveTab} onNewProject={() => setShowProjectModal(true)} />;
       case 'projects':
-        return <ProjectList setActiveTab={setActiveTab} />;
+        return <ProjectList setActiveTab={setActiveTab} onNewProject={() => setShowProjectModal(true)} />;
       case 'studies':
         return (
           <StudyList 
             onSelectStudy={(study) => setSelectedStudy(study)} 
             onRunTest={(id) => setTestStudyId(id)}
+            onCreateStudy={() => setActiveTab('create-study')}
           />
         );
       case 'create-study':
@@ -151,7 +154,7 @@ export default function App() {
           </div>
         );
       default:
-        return <Dashboard setActiveTab={setActiveTab} />;
+        return <Dashboard setActiveTab={setActiveTab} onNewProject={() => setShowProjectModal(true)} />;
     }
   };
 
@@ -164,8 +167,14 @@ export default function App() {
         setActiveTab(tab);
         setSelectedStudy(null);
       }}
+      onNewProject={() => setShowProjectModal(true)}
     >
       {renderContent()}
+      
+      <ProjectModal 
+        isOpen={showProjectModal} 
+        onClose={() => setShowProjectModal(false)} 
+      />
 
       {showRecruitModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">

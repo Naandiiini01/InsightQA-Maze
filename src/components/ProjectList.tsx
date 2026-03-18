@@ -11,7 +11,10 @@ import {
   Beaker
 } from 'lucide-react';
 
-export const ProjectList: React.FC<{ setActiveTab: (tab: string) => void }> = ({ setActiveTab }) => {
+export const ProjectList: React.FC<{ 
+  setActiveTab: (tab: string) => void,
+  onNewProject: () => void
+}> = ({ setActiveTab, onNewProject }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [studies, setStudies] = useState<Study[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +72,7 @@ export const ProjectList: React.FC<{ setActiveTab: (tab: string) => void }> = ({
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-[#1A1A1A]">Projects</h2>
         <button 
-          onClick={() => setActiveTab('dashboard')} // Dashboard has the create project modal
+          onClick={onNewProject}
           className="px-4 py-2 bg-[#0066FF] text-white rounded-lg text-sm font-bold hover:bg-[#0052CC] transition-all flex items-center gap-2"
         >
           <Plus size={18} />
@@ -144,7 +147,7 @@ export const ProjectList: React.FC<{ setActiveTab: (tab: string) => void }> = ({
             <h3 className="text-xl font-bold text-[#1A1A1A]">No projects found</h3>
             <p className="text-[#6C757D] mt-2 mb-6">Organize your studies into projects for better management.</p>
             <button 
-              onClick={() => setActiveTab('dashboard')}
+              onClick={onNewProject}
               className="px-6 py-2 bg-[#0066FF] text-white rounded-lg font-bold hover:bg-[#0052CC] transition-all"
             >
               Create Your First Project

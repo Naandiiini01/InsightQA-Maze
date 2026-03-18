@@ -15,7 +15,10 @@ import {
   FolderPlus
 } from 'lucide-react';
 
-export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ setActiveTab }) => {
+export const Dashboard: React.FC<{ 
+  setActiveTab: (tab: string) => void,
+  onNewProject: () => void
+}> = ({ setActiveTab, onNewProject }) => {
   const [studies, setStudies] = useState<Study[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,10 +28,6 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
     avgSuccessRate: 0,
     insightsGenerated: 0
   });
-  const [showProjectModal, setShowProjectModal] = useState(false);
-  const [projectName, setProjectName] = useState('');
-  const [projectDesc, setProjectDesc] = useState('');
-  const [creatingProject, setCreatingProject] = useState(false);
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -115,29 +114,6 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
       unsubscribeResponses();
     };
   }, []);
-
-  const handleCreateProject = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!projectName.trim() || !auth.currentUser) return;
-
-    setCreatingProject(true);
-    try {
-      await addDoc(collection(db, 'projects'), {
-        name: projectName,
-        description: projectDesc,
-        ownerId: auth.currentUser.uid,
-        workspaceId: 'default', // For now
-        createdAt: new Date().toISOString()
-      });
-      setShowProjectModal(false);
-      setProjectName('');
-      setProjectDesc('');
-    } catch (error) {
-      console.error('Error creating project:', error);
-    } finally {
-      setCreatingProject(false);
-    }
-  };
 
   const stats = [
     { label: 'Active Studies', value: statsData.activeStudies.toString(), icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -255,7 +231,7 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
           <h2 className="text-lg font-bold pt-4">Quick Actions</h2>
           <div className="grid grid-cols-1 gap-3">
             <button 
-              onClick={() => setShowProjectModal(true)}
+              onClick={onNewProject}
               className="p-4 bg-white border border-[#E9ECEF] rounded-xl hover:border-[#0066FF] hover:shadow-sm transition-all text-left flex items-center gap-3"
             >
               <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Plus size={18} /></div>
@@ -271,69 +247,6 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
           </div>
         </div>
       </div>
-
-      {/* Create Project Modal */}
-      {showProjectModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
-            <div className="p-6 border-b border-[#E9ECEF] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                  <FolderPlus size={20} />
-                </div>
-                <h3 className="font-bold text-lg">Create New Project</h3>
-              </div>
-              <button 
-                onClick={() => setShowProjectModal(false)}
-                className="p-2 hover:bg-[#F8F9FA] rounded-full transition-colors"
-              >
-                <X size={20} className="text-[#ADB5BD]" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleCreateProject} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#495057] mb-1.5">Project Name</label>
-                <input 
-                  type="text" 
-                  required
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                  placeholder="e.g. Mobile App Redesign"
-                  className="w-full p-3 bg-[#F8F9FA] border border-[#E9ECEF] rounded-xl focus:ring-2 focus:ring-[#0066FF] outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#495057] mb-1.5">Description (Optional)</label>
-                <textarea 
-                  rows={3}
-                  value={projectDesc}
-                  onChange={(e) => setProjectDesc(e.target.value)}
-                  placeholder="What is this project about?"
-                  className="w-full p-3 bg-[#F8F9FA] border border-[#E9ECEF] rounded-xl focus:ring-2 focus:ring-[#0066FF] outline-none transition-all resize-none"
-                />
-              </div>
-              
-              <div className="pt-2 flex gap-3">
-                <button 
-                  type="button"
-                  onClick={() => setShowProjectModal(false)}
-                  className="flex-1 py-3 border border-[#E9ECEF] text-[#495057] font-bold rounded-xl hover:bg-[#F8F9FA] transition-all"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={creatingProject}
-                  className="flex-1 py-3 bg-[#0066FF] text-white font-bold rounded-xl hover:bg-[#0052CC] transition-all disabled:opacity-50"
-                >
-                  {creatingProject ? 'Creating...' : 'Create Project'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
