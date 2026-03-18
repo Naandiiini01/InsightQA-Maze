@@ -23,9 +23,10 @@ interface SidebarProps {
   user: User;
   onSignOut: () => void;
   onNewProject: () => void;
+  onNewStudy: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user, onSignOut, onNewProject }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user, onSignOut, onNewProject, onNewStudy }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: Folder },
@@ -48,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user,
 
         <div className="flex flex-col gap-2 mb-8">
           <button 
-            onClick={() => setActiveTab('create-study')}
+            onClick={onNewStudy}
             className="w-full py-2.5 px-4 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-sm"
           >
             <PlusCircle size={18} />

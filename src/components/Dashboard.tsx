@@ -18,8 +18,9 @@ import {
 export const Dashboard: React.FC<{ 
   setActiveTab: (tab: string) => void,
   onNewProject: () => void,
+  onNewStudy: () => void,
   onSelectStudy: (study: Study) => void
-}> = ({ setActiveTab, onNewProject, onSelectStudy }) => {
+}> = ({ setActiveTab, onNewProject, onNewStudy, onSelectStudy }) => {
   const [studies, setStudies] = useState<Study[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -194,7 +195,7 @@ export const Dashboard: React.FC<{
                 <h3 className="text-[#1A1A1A] font-bold">No studies yet</h3>
                 <p className="text-[#6C757D] text-sm mt-1 mb-6">Create your first study to start gathering insights.</p>
                 <button 
-                  onClick={() => setActiveTab('create-study')}
+                  onClick={onNewStudy}
                   className="px-6 py-2 bg-[#0066FF] text-white rounded-lg font-medium"
                 >
                   Create Study

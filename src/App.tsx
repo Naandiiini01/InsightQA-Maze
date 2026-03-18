@@ -9,11 +9,13 @@ import { StudyBuilder } from './components/StudyBuilder';
 import { StudyList } from './components/StudyList';
 import { ProjectList } from './components/ProjectList';
 import { ProjectModal } from './components/ProjectModal';
+import { CreateStudyModal } from './components/CreateStudyModal';
 import { ParticipantFlow } from './components/ParticipantFlow';
 import { Analytics } from './components/Analytics';
 import { Participants } from './components/Participants';
 import { Templates } from './components/Templates';
 import { Study, Participant } from './types';
+import { TemplateData, TEMPLATES } from './data/templates';
 import { Users, X, Check, ChevronDown, Mail } from 'lucide-react';
 import { getShareableUrl, copyToClipboard } from './utils/url';
 import { clsx, type ClassValue } from 'clsx';
@@ -40,6 +42,8 @@ export default function App() {
 
   const [isParticipantMode, setIsParticipantMode] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showCreateStudyModal, setShowCreateStudyModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateData | undefined>(undefined);
 
   useEffect(() => {
     if (user) {
@@ -113,6 +117,7 @@ export default function App() {
           <Dashboard 
             setActiveTab={setActiveTab} 
             onNewProject={() => setShowProjectModal(true)} 
+            onNewStudy={() => setShowCreateStudyModal(true)}
             onSelectStudy={(study) => setSelectedStudy(study)}
           />
         );
@@ -126,15 +131,30 @@ export default function App() {
               setTestStudyId(id);
               setIsParticipantMode(true);
             }}
-            onCreateStudy={() => setActiveTab('create-study')}
+            onCreateStudy={() => setShowCreateStudyModal(true)}
           />
         );
       case 'create-study':
-        return <StudyBuilder onComplete={() => setActiveTab('studies')} />;
+        return (
+          <StudyBuilder 
+            onComplete={() => {
+              setActiveTab('studies');
+              setSelectedTemplate(undefined);
+            }} 
+            initialData={selectedTemplate}
+          />
+        );
       case 'participants':
         return <Participants user={user} onRecruit={() => setShowRecruitModal(true)} />;
       case 'templates':
-        return <Templates onUseTemplate={(id) => setActiveTab('create-study')} />;
+        return (
+          <Templates 
+            onUseTemplate={(id) => {
+              setSelectedTemplate(TEMPLATES[id]);
+              setActiveTab('create-study');
+            }} 
+          />
+        );
       case 'analytics':
         return (
           <div className="bg-white p-12 rounded-3xl border border-[#E9ECEF] text-center">
@@ -167,6 +187,7 @@ export default function App() {
           <Dashboard 
             setActiveTab={setActiveTab} 
             onNewProject={() => setShowProjectModal(true)} 
+            onNewStudy={() => setShowCreateStudyModal(true)}
             onSelectStudy={(study) => setSelectedStudy(study)}
           />
         );
@@ -183,12 +204,28 @@ export default function App() {
         setSelectedStudy(null);
       }}
       onNewProject={() => setShowProjectModal(true)}
+      onNewStudy={() => setShowCreateStudyModal(true)}
     >
       {renderContent()}
       
       <ProjectModal 
         isOpen={showProjectModal} 
         onClose={() => setShowProjectModal(false)} 
+      />
+
+      <CreateStudyModal 
+        isOpen={showCreateStudyModal}
+        onClose={() => setShowCreateStudyModal(false)}
+        onStartFromScratch={() => {
+          setShowCreateStudyModal(false);
+          setSelectedTemplate(undefined);
+          setActiveTab('create-study');
+        }}
+        onSelectTemplate={(id) => {
+          setShowCreateStudyModal(false);
+          setSelectedTemplate(TEMPLATES[id]);
+          setActiveTab('create-study');
+        }}
       />
 
       {showRecruitModal && (

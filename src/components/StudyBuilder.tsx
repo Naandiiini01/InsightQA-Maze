@@ -3,6 +3,7 @@ import { db, auth } from '../firebase';
 import { collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../utils/firestore';
 import { StudyType, Task, Question, Project } from '../types';
+import { TemplateData } from '../data/templates';
 import { 
   Save, 
   Plus, 
@@ -15,15 +16,15 @@ import {
   FolderOpen
 } from 'lucide-react';
 
-export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+export const StudyBuilder: React.FC<{ onComplete: () => void, initialData?: TemplateData }> = ({ onComplete, initialData }) => {
   const [step, setStep] = useState(1);
-  const [title, setTitle] = useState('');
-  const [prototypeUrl, setPrototypeUrl] = useState('');
-  const [type, setType] = useState<StudyType>('prototype');
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [prototypeUrl, setPrototypeUrl] = useState(initialData?.prototypeUrl || '');
+  const [type, setType] = useState<StudyType>(initialData?.type || 'prototype');
   const [projectId, setProjectId] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(initialData?.tasks || []);
+  const [questions, setQuestions] = useState<Question[]>(initialData?.questions || []);
   const [saving, setSaving] = useState(false);
 
   React.useEffect(() => {

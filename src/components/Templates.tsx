@@ -27,7 +27,7 @@ const templates: Template[] = [
     description: 'Evaluate how easily users can complete specific tasks on your prototype.',
     icon: Target,
     color: 'bg-blue-50 text-blue-600',
-    tasks: 3,
+    tasks: 1,
     questions: 2
   },
   {
@@ -37,7 +37,7 @@ const templates: Template[] = [
     icon: Sparkles,
     color: 'bg-purple-50 text-purple-600',
     tasks: 1,
-    questions: 5
+    questions: 2
   },
   {
     id: 'user-survey',
@@ -46,7 +46,7 @@ const templates: Template[] = [
     icon: MessageSquare,
     color: 'bg-green-50 text-green-600',
     tasks: 0,
-    questions: 10
+    questions: 2
   },
   {
     id: 'navigation-test',
@@ -54,7 +54,7 @@ const templates: Template[] = [
     description: 'Test the information architecture and menu structure of your product.',
     icon: Layout,
     color: 'bg-orange-50 text-orange-600',
-    tasks: 5,
+    tasks: 1,
     questions: 1
   }
 ];

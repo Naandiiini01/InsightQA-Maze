@@ -10,9 +10,10 @@ interface LayoutProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   onNewProject: () => void;
+  onNewStudy: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, user, onSignOut, activeTab, setActiveTab, onNewProject }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, user, onSignOut, activeTab, setActiveTab, onNewProject, onNewStudy }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -40,6 +41,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onSignOut, activ
               user={user} 
               onSignOut={onSignOut} 
               onNewProject={onNewProject}
+              onNewStudy={onNewStudy}
             />
           </div>
         </>
