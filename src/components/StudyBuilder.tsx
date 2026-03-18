@@ -155,6 +155,11 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-[#E9ECEF] shadow-xl overflow-hidden mb-8">
+      <div className="p-4 md:p-8 border-b border-[#E9ECEF] bg-[#F8F9FA]/50">
+        <h2 className="text-2xl font-bold text-[#1A1A1A]">Create a new study</h2>
+        <p className="text-[#6C757D] text-sm mt-1">Set up your usability test, survey, or task list.</p>
+      </div>
+
       {/* Stepper */}
       <div className="flex border-b border-[#E9ECEF] overflow-x-auto no-scrollbar">
         {[1, 2, 3].map((s) => (
