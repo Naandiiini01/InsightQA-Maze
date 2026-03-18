@@ -109,14 +109,23 @@ export default function App() {
 
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard setActiveTab={setActiveTab} onNewProject={() => setShowProjectModal(true)} />;
+        return (
+          <Dashboard 
+            setActiveTab={setActiveTab} 
+            onNewProject={() => setShowProjectModal(true)} 
+            onSelectStudy={(study) => setSelectedStudy(study)}
+          />
+        );
       case 'projects':
         return <ProjectList setActiveTab={setActiveTab} onNewProject={() => setShowProjectModal(true)} />;
       case 'studies':
         return (
           <StudyList 
             onSelectStudy={(study) => setSelectedStudy(study)} 
-            onRunTest={(id) => setTestStudyId(id)}
+            onRunTest={(id) => {
+              setTestStudyId(id);
+              setIsParticipantMode(true);
+            }}
             onCreateStudy={() => setActiveTab('create-study')}
           />
         );
@@ -154,7 +163,13 @@ export default function App() {
           </div>
         );
       default:
-        return <Dashboard setActiveTab={setActiveTab} onNewProject={() => setShowProjectModal(true)} />;
+        return (
+          <Dashboard 
+            setActiveTab={setActiveTab} 
+            onNewProject={() => setShowProjectModal(true)} 
+            onSelectStudy={(study) => setSelectedStudy(study)}
+          />
+        );
     }
   };
 

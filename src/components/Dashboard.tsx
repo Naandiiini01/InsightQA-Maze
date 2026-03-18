@@ -17,8 +17,9 @@ import {
 
 export const Dashboard: React.FC<{ 
   setActiveTab: (tab: string) => void,
-  onNewProject: () => void
-}> = ({ setActiveTab, onNewProject }) => {
+  onNewProject: () => void,
+  onSelectStudy: (study: Study) => void
+}> = ({ setActiveTab, onNewProject, onSelectStudy }) => {
   const [studies, setStudies] = useState<Study[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -158,7 +159,11 @@ export const Dashboard: React.FC<{
             ) : studies.length > 0 ? (
               <div className="divide-y divide-[#E9ECEF]">
                 {studies.map((study) => (
-                  <div key={study.id} className="p-5 hover:bg-[#F8F9FA] transition-colors flex items-center justify-between group cursor-pointer">
+                  <div 
+                    key={study.id} 
+                    onClick={() => onSelectStudy(study)}
+                    className="p-5 hover:bg-[#F8F9FA] transition-colors flex items-center justify-between group cursor-pointer"
+                  >
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                         study.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'
