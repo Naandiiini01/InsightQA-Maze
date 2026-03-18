@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { db, auth } from '../firebase';
 import { collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../utils/firestore';
 import { StudyType, Task, Question, Project } from '../types';
 import { 
   Save, 
@@ -82,8 +83,19 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
         type,
         projectId: projectId || null,
         ownerId: auth.currentUser.uid,
-        tasks: tasks.map(t => ({ ...t, title: t.title || 'Untitled Task' })),
-        questions: questions.map(q => ({ ...q, text: q.text || 'Untitled Question' })),
+        tasks: tasks.map(t => ({ 
+          id: t.id,
+          title: t.title || 'Untitled Task',
+          instructions: t.instructions || '',
+          successPath: t.successPath || ''
+        })),
+        questions: questions.map(q => ({ 
+          id: q.id,
+          text: q.text || 'Untitled Question',
+          type: q.type,
+          required: q.required,
+          options: q.options || []
+        })),
         status: 'draft' as const,
         config: { showTimer: true },
         prototypeUrl: prototypeUrl.trim() || '',
@@ -95,7 +107,7 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
       onComplete();
     } catch (err: any) {
       console.error("Save Error:", err);
-      setError(err.message || "Failed to save study. Please try again.");
+      handleFirestoreError(err, OperationType.CREATE, 'studies');
     } finally {
       setSaving(false);
     }

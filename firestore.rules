@@ -46,7 +46,12 @@ service cloud.firestore {
              data.ownerId is string &&
              data.title is string &&
              data.type in ['prototype', 'survey', 'website', 'task'] &&
-             data.status in ['draft', 'active', 'completed'];
+             data.status in ['draft', 'active', 'completed'] &&
+             data.tasks is list &&
+             data.questions is list &&
+             data.config is map &&
+             data.prototypeUrl is string &&
+             data.createdAt is string;
     }
 
     function isValidResponse(data) {
