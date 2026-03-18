@@ -45,6 +45,7 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
       id: Math.random().toString(36).substr(2, 9),
       title: '',
       instructions: '',
+      successPath: ''
     };
     setTasks([...tasks, newTask]);
   };
@@ -232,6 +233,20 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
                         setTasks(newTasks);
                       }}
                     />
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[#6C757D] uppercase tracking-widest pl-1">Success Screen / Path (Optional)</label>
+                      <input 
+                        type="text"
+                        placeholder="e.g. /checkout or 'Success Page'"
+                        className="w-full p-3 bg-[#F8F9FA] rounded-xl outline-none text-sm border border-transparent focus:border-[#0066FF]/20"
+                        value={task.successPath || ''}
+                        onChange={(e) => {
+                          const newTasks = [...tasks];
+                          newTasks[idx].successPath = e.target.value;
+                          setTasks(newTasks);
+                        }}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

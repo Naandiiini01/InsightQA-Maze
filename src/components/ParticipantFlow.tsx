@@ -9,7 +9,8 @@ import {
   Timer,
   MousePointer2,
   AlertCircle,
-  UserPlus
+  UserPlus,
+  Target
 } from 'lucide-react';
 
 export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void }> = ({ studyId, onComplete }) => {
@@ -17,6 +18,7 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
   const [step, setStep] = useState<'signup' | 'intro' | 'tasks' | 'questions' | 'thanks'>('intro');
   const [participant, setParticipant] = useState<Partial<Participant> | null>(null);
   const [currentTaskIdx, setCurrentTaskIdx] = useState(0);
+  const [showMission, setShowMission] = useState(true);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [results, setResults] = useState<any[]>([]);
   const [startTime, setStartTime] = useState<number>(0);
@@ -88,6 +90,7 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
 
   const handleStart = async () => {
     setStep('tasks');
+    setShowMission(true);
     setStartTime(Date.now());
     
     if (participant?.id) {
@@ -109,6 +112,7 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
     
     if (currentTaskIdx < study!.tasks.length - 1) {
       setCurrentTaskIdx(currentTaskIdx + 1);
+      setShowMission(true);
       setStartTime(Date.now());
     } else {
       setStep('questions');
@@ -270,11 +274,47 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
           )}
 
           {step === 'tasks' && (
-            <div className="flex flex-col h-[600px]">
-              <div className="p-8 border-b border-[#E9ECEF] bg-[#F8F9FA]">
-                <h2 className="text-sm font-bold text-[#0066FF] uppercase tracking-widest mb-2">Current Task</h2>
-                <h3 className="text-2xl font-bold text-[#1A1A1A]">{study.tasks[currentTaskIdx].title}</h3>
-                <p className="text-[#6C757D] mt-2">{study.tasks[currentTaskIdx].instructions}</p>
+            <div className="flex flex-col h-[600px] relative">
+              {showMission && (
+                <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center p-8 animate-in fade-in duration-300">
+                  <div className="max-w-md w-full space-y-6 text-center">
+                    <div className="w-16 h-16 bg-blue-50 text-[#0066FF] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Target size={32} />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-sm font-bold text-[#0066FF] uppercase tracking-widest">Mission {currentTaskIdx + 1}</h2>
+                      <h3 className="text-2xl font-bold text-[#1A1A1A]">{study.tasks[currentTaskIdx].title}</h3>
+                    </div>
+                    <p className="text-[#6C757D] text-lg leading-relaxed">
+                      {study.tasks[currentTaskIdx].instructions}
+                    </p>
+                    {study.tasks[currentTaskIdx].successPath && (
+                      <div className="p-3 bg-green-50 text-green-700 rounded-xl text-sm font-medium inline-block">
+                        Goal: Reach {study.tasks[currentTaskIdx].successPath}
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => setShowMission(false)}
+                      className="w-full py-4 bg-[#1A1A1A] text-white rounded-2xl font-bold text-lg hover:bg-black transition-all shadow-lg"
+                    >
+                      Begin Mission
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-8 border-b border-[#E9ECEF] bg-[#F8F9FA] flex items-center justify-between">
+                <div>
+                  <h2 className="text-[10px] font-bold text-[#0066FF] uppercase tracking-widest mb-1">Current Mission</h2>
+                  <h3 className="text-lg font-bold text-[#1A1A1A]">{study.tasks[currentTaskIdx].title}</h3>
+                </div>
+                <button 
+                  onClick={() => setShowMission(true)}
+                  className="p-2 text-[#6C757D] hover:bg-white rounded-lg transition-colors"
+                  title="View Instructions"
+                >
+                  <AlertCircle size={20} />
+                </button>
               </div>
               
               <div 
@@ -298,25 +338,38 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
                           but that would block interaction with the prototype.
                           For now, let's just show the prototype. If they click the "Complete" button, we record it.
                       */}
-                      <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
-                        <button 
-                          className="px-6 py-2 bg-[#1A1A1A] text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-transform"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTaskComplete(true);
-                          }}
-                        >
-                          Task Completed
-                        </button>
-                        <button 
-                          className="px-6 py-2 bg-white text-[#6C757D] border border-[#E9ECEF] rounded-xl font-bold shadow-sm hover:bg-[#F8F9FA]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTaskComplete(false);
-                          }}
-                        >
-                          Skip Task
-                        </button>
+                      <div className="absolute bottom-6 right-6 z-10 flex flex-col gap-3 items-end">
+                        <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-[#E9ECEF] flex items-center gap-4 text-xs font-bold text-[#495057]">
+                          <div className="flex items-center gap-1.5">
+                            <Timer size={14} className="text-[#0066FF]" />
+                            <span>{Math.floor((Date.now() - startTime) / 1000)}s</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <MousePointer2 size={14} className="text-[#0066FF]" />
+                            <span>{clicks.filter(c => c.taskId === study.tasks[currentTaskIdx].id).length} clicks</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            className="px-6 py-3 bg-white text-[#6C757D] border border-[#E9ECEF] rounded-2xl font-bold shadow-lg hover:bg-[#F8F9FA] transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTaskComplete(false);
+                            }}
+                          >
+                            Skip Mission
+                          </button>
+                          <button 
+                            className="px-8 py-3 bg-[#0066FF] text-white rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all flex items-center gap-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTaskComplete(true);
+                            }}
+                          >
+                            <CheckCircle2 size={20} />
+                            Finish Mission
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ) : (

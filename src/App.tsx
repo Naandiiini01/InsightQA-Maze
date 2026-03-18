@@ -11,6 +11,7 @@ import { ProjectList } from './components/ProjectList';
 import { ParticipantFlow } from './components/ParticipantFlow';
 import { Analytics } from './components/Analytics';
 import { Participants } from './components/Participants';
+import { Templates } from './components/Templates';
 import { Study, Participant } from './types';
 import { Users, X, Check, ChevronDown, Mail } from 'lucide-react';
 import { getShareableUrl, copyToClipboard } from './utils/url';
@@ -120,6 +121,8 @@ export default function App() {
         return <StudyBuilder onComplete={() => setActiveTab('studies')} />;
       case 'participants':
         return <Participants user={user} onRecruit={() => setShowRecruitModal(true)} />;
+      case 'templates':
+        return <Templates onUseTemplate={(id) => setActiveTab('create-study')} />;
       case 'analytics':
         return (
           <div className="bg-white p-12 rounded-3xl border border-[#E9ECEF] text-center">

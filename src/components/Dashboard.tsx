@@ -17,6 +17,7 @@ import {
 
 export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ setActiveTab }) => {
   const [studies, setStudies] = useState<Study[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState({
     activeStudies: 0,
@@ -49,6 +50,21 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
     }, (error) => {
       console.error("Dashboard Studies Listener Error:", error);
       setLoading(false);
+    });
+
+    // Fetch recent activity (responses)
+    const qActivity = query(
+      collection(db, 'responses'),
+      where('ownerId', '==', auth.currentUser.uid),
+      limit(5)
+    );
+    const unsubscribeActivity = onSnapshot(qActivity, (snapshot) => {
+      const data = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as any))
+        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setRecentActivity(data);
+    }, (error) => {
+      console.error("Dashboard Activity Listener Error:", error);
     });
 
     // Fetch all studies for count
@@ -94,6 +110,7 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
 
     return () => {
       unsubscribeStudies();
+      unsubscribeActivity();
       unsubscribeStats();
       unsubscribeResponses();
     };
@@ -206,9 +223,36 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
           </div>
         </div>
 
-        {/* Quick Actions / Activity */}
+        {/* Recent Activity */}
         <div className="space-y-4">
-          <h2 className="text-lg font-bold">Quick Actions</h2>
+          <h2 className="text-lg font-bold">Recent Activity</h2>
+          <div className="bg-white rounded-2xl border border-[#E9ECEF] overflow-hidden">
+            {recentActivity.length > 0 ? (
+              <div className="divide-y divide-[#E9ECEF]">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="p-4 hover:bg-[#F8F9FA] transition-colors flex items-start gap-3">
+                    <div className="mt-1 w-8 h-8 bg-blue-50 text-[#0066FF] rounded-full flex items-center justify-center flex-shrink-0">
+                      <Users size={14} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-[#1A1A1A]">
+                        <span className="font-bold">{activity.participantId || 'A participant'}</span> completed a session
+                      </p>
+                      <p className="text-[10px] text-[#6C757D] mt-0.5">
+                        {new Date(activity.createdAt).toLocaleTimeString()} • {activity.metrics?.successRate.toFixed(0)}% success
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-[#6C757D] text-sm italic">
+                No recent activity to show.
+              </div>
+            )}
+          </div>
+
+          <h2 className="text-lg font-bold pt-4">Quick Actions</h2>
           <div className="grid grid-cols-1 gap-3">
             <button 
               onClick={() => setShowProjectModal(true)}
@@ -218,18 +262,11 @@ export const Dashboard: React.FC<{ setActiveTab: (tab: string) => void }> = ({ s
               <span className="font-medium text-sm">New Project</span>
             </button>
             <button 
-              onClick={() => setActiveTab('settings')}
+              onClick={() => setActiveTab('templates')}
               className="p-4 bg-white border border-[#E9ECEF] rounded-xl hover:border-[#0066FF] hover:shadow-sm transition-all text-left flex items-center gap-3"
             >
-              <div className="p-2 bg-purple-50 text-purple-600 rounded-lg"><Users size={18} /></div>
-              <span className="font-medium text-sm">Invite Team</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('analytics')}
-              className="p-4 bg-white border border-[#E9ECEF] rounded-xl hover:border-[#0066FF] hover:shadow-sm transition-all text-left flex items-center gap-3"
-            >
-              <div className="p-2 bg-green-50 text-green-600 rounded-lg"><CheckCircle2 size={18} /></div>
-              <span className="font-medium text-sm">View Reports</span>
+              <div className="p-2 bg-purple-50 text-purple-600 rounded-lg"><FileText size={18} /></div>
+              <span className="font-medium text-sm">Use Template</span>
             </button>
           </div>
         </div>

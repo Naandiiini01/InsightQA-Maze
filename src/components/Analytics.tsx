@@ -27,6 +27,9 @@ import Markdown from 'react-markdown';
 
 export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ study, onBack }) => {
   const [responses, setResponses] = useState<StudyResponse[]>([]);
+  const [selectedResponse, setSelectedResponse] = useState<StudyResponse | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | 'all'>('all');
+  const [showHeatmap, setShowHeatmap] = useState(true);
   const [aiInsights, setAiInsights] = useState<string>('');
   const [analyzing, setAnalyzing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -73,10 +76,163 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
 
   const COLORS = ['#0066FF', '#E9ECEF'];
 
+  const filteredClicks = selectedResponse?.metrics.clicks?.filter((c: any) => 
+    selectedTaskId === 'all' || c.taskId === selectedTaskId
+  ) || [];
+
   if (loading) return <div className="text-center py-20">Loading analytics...</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Session Detail Modal */}
+      {selectedResponse && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 md:p-8">
+          <div className="bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-3xl overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-[#E9ECEF] flex items-center justify-between bg-white">
+              <div className="flex items-center gap-6">
+                <div>
+                  <h3 className="text-xl font-bold text-[#1A1A1A]">Session Detail</h3>
+                  <p className="text-sm text-[#6C757D]">Participant: {selectedResponse.participantId} • {new Date(selectedResponse.createdAt).toLocaleString()}</p>
+                </div>
+                
+                <div className="h-10 w-px bg-[#E9ECEF]" />
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-[#6C757D] uppercase tracking-widest">Filter Task:</span>
+                    <select 
+                      value={selectedTaskId}
+                      onChange={(e) => setSelectedTaskId(e.target.value)}
+                      className="bg-[#F8F9FA] border border-[#E9ECEF] rounded-lg px-3 py-1.5 text-sm font-medium outline-none focus:ring-2 focus:ring-[#0066FF] transition-all"
+                    >
+                      <option value="all">All Tasks</option>
+                      {study.tasks.map((t, i) => (
+                        <option key={t.id} value={t.id}>Task {i + 1}: {t.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setShowHeatmap(!showHeatmap)}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+                      showHeatmap ? "bg-[#0066FF] text-white" : "bg-[#F8F9FA] text-[#6C757D] border border-[#E9ECEF]"
+                    }`}
+                  >
+                    <Target size={16} />
+                    {showHeatmap ? 'Heatmap On' : 'Heatmap Off'}
+                  </button>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setSelectedResponse(null);
+                  setSelectedTaskId('all');
+                }}
+                className="p-2 hover:bg-[#F8F9FA] rounded-full transition-colors"
+              >
+                <ArrowLeft size={24} className="rotate-90" />
+              </button>
+            </div>
+            
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+              {/* Prototype View with Heatmap Overlay */}
+              <div className="flex-1 bg-[#F8F9FA] relative overflow-hidden group">
+                {study.prototypeUrl ? (
+                  <div className="w-full h-full relative">
+                    <iframe 
+                      src={study.prototypeUrl.includes('figma.com') 
+                        ? `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(study.prototypeUrl)}`
+                        : study.prototypeUrl
+                      }
+                      className="w-full h-full border-none pointer-events-none"
+                    />
+                    {/* Click Overlay */}
+                    {showHeatmap && (
+                      <div className="absolute inset-0 z-10">
+                        {filteredClicks.map((click: any, i: number) => (
+                          <div 
+                            key={i}
+                            className="absolute w-8 h-8 bg-red-500/30 border-2 border-red-500/50 rounded-full -translate-x-1/2 -translate-y-1/2 shadow-lg animate-in zoom-in duration-300 flex items-center justify-center"
+                            style={{ left: `${click.x}%`, top: `${click.y}%`, animationDelay: `${i * 50}ms` }}
+                          >
+                            <div className="w-1 h-1 bg-red-600 rounded-full" />
+                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-xl">
+                              Click {i + 1}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[#ADB5BD]">
+                    No prototype URL available
+                  </div>
+                )}
+              </div>
+
+              {/* Session Stats Sidebar */}
+              <div className="w-full md:w-80 border-l border-[#E9ECEF] bg-white overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h4 className="text-xs font-bold text-[#6C757D] uppercase tracking-widest mb-4">Performance</h4>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-[#495057]">Success Rate</span>
+                      <span className="text-lg font-bold text-green-600">{selectedResponse.metrics.successRate.toFixed(0)}%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-[#495057]">Time Taken</span>
+                      <span className="text-lg font-bold">{selectedResponse.metrics.timeTaken.toFixed(1)}s</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-[#495057]">Total Clicks</span>
+                      <span className="text-lg font-bold">{selectedResponse.metrics.clicks?.length || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold text-[#6C757D] uppercase tracking-widest mb-4">Task Results</h4>
+                  <div className="space-y-3">
+                    {selectedResponse.results.filter(r => r.taskId).map((res, i) => {
+                      const task = study.tasks.find(t => t.id === res.taskId);
+                      return (
+                        <div key={i} className="p-3 bg-[#F8F9FA] rounded-xl border border-[#E9ECEF]">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-bold text-[#6C757D]">Task {i + 1}</span>
+                            {res.success ? (
+                              <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded uppercase">Success</span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded uppercase">Failed</span>
+                            )}
+                          </div>
+                          <p className="text-sm font-bold text-[#1A1A1A] line-clamp-1">{task?.title || 'Untitled Task'}</p>
+                          <p className="text-xs text-[#6C757D] mt-1">{res.time.toFixed(1)}s taken</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold text-[#6C757D] uppercase tracking-widest mb-4">Question Answers</h4>
+                  <div className="space-y-3">
+                    {selectedResponse.results.filter((r: any) => r.questionId).map((res: any, i: number) => {
+                      const question = study.questions.find(q => q.id === res.questionId);
+                      return (
+                        <div key={i} className="space-y-1">
+                          <p className="text-xs font-bold text-[#1A1A1A]">{question?.text}</p>
+                          <p className="text-sm text-[#6C757D] italic">"{res.answer || 'No answer'}"</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <button onClick={onBack} className="flex items-center gap-2 text-[#6C757D] hover:text-[#1A1A1A] font-medium transition-colors">
           <ArrowLeft size={20} /> Back to Studies
@@ -231,7 +387,12 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
                   <td className="px-6 py-4 text-sm text-[#495057]">{res.metrics.timeTaken.toFixed(1)}s</td>
                   <td className="px-6 py-4 text-sm text-[#6C757D]">{new Date(res.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-[#0066FF] font-bold text-sm hover:underline">View Session</button>
+                    <button 
+                      onClick={() => setSelectedResponse(res)}
+                      className="text-[#0066FF] font-bold text-sm hover:underline"
+                    >
+                      View Session
+                    </button>
                   </td>
                 </tr>
               ))}
