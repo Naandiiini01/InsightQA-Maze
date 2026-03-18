@@ -36,8 +36,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user,
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-[#E9ECEF] flex flex-col">
-      <div className="p-6">
+    <aside className="w-64 lg:w-72 h-full bg-white border-r border-[#E9ECEF] flex flex-col shadow-xl lg:shadow-none">
+      <div className="p-6 flex-1 overflow-y-auto">
         <div className="flex items-center gap-2 mb-8">
           <div className="w-8 h-8 bg-[#0066FF] rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-lg">I</span>

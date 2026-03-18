@@ -183,29 +183,29 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header */}
-      <header className="h-16 bg-white border-b border-[#E9ECEF] flex items-center justify-between px-8">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#0066FF] rounded-lg flex items-center justify-center">
+      <header className="h-16 bg-white border-b border-[#E9ECEF] flex items-center justify-between px-4 md:px-8 flex-shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 bg-[#0066FF] rounded-lg flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold">I</span>
           </div>
-          <span className="font-bold text-[#1A1A1A]">{study.title}</span>
+          <span className="font-bold text-[#1A1A1A] truncate text-sm md:text-base">{study.title}</span>
         </div>
-        <div className="text-sm font-medium text-[#6C757D]">
-          {step === 'tasks' && `Task ${currentTaskIdx + 1} of ${study.tasks.length}`}
-          {step === 'questions' && `Question ${currentQuestionIdx + 1} of ${study.questions.length}`}
+        <div className="text-[10px] md:text-sm font-medium text-[#6C757D] whitespace-nowrap ml-2">
+          {step === 'tasks' && `Task ${currentTaskIdx + 1}/${study.tasks.length}`}
+          {step === 'questions' && `Q ${currentQuestionIdx + 1}/${study.questions.length}`}
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-xl border border-[#E9ECEF] overflow-hidden">
+      <main className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
+        <div className="max-w-2xl w-full h-full md:h-auto bg-white rounded-2xl md:rounded-3xl shadow-xl border border-[#E9ECEF] overflow-hidden flex flex-col">
           {step === 'signup' && (
-            <div className="p-12 space-y-8">
+            <div className="p-6 md:p-12 space-y-6 md:space-y-8 overflow-y-auto">
               <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-[#F0F7FF] text-[#0066FF] rounded-2xl flex items-center justify-center mx-auto">
-                  <UserPlus size={32} />
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-[#F0F7FF] text-[#0066FF] rounded-2xl flex items-center justify-center mx-auto">
+                  <UserPlus size={28} />
                 </div>
-                <h1 className="text-3xl font-bold text-[#1A1A1A]">Join the Study</h1>
-                <p className="text-[#6C757D]">Please provide your details to begin the test.</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A]">Join the Study</h1>
+                <p className="text-sm md:text-base text-[#6C757D]">Please provide your details to begin the test.</p>
               </div>
 
               <form onSubmit={handleSignup} className="space-y-4">
@@ -246,27 +246,27 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
           )}
 
           {step === 'intro' && (
-            <div className="p-12 text-center space-y-6">
-              <div className="w-20 h-20 bg-[#F0F7FF] text-[#0066FF] rounded-full flex items-center justify-center mx-auto mb-4">
-                <Play size={40} fill="currentColor" />
+            <div className="p-6 md:p-12 text-center space-y-6 overflow-y-auto">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-[#F0F7FF] text-[#0066FF] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Play size={32} fill="currentColor" />
               </div>
-              <h1 className="text-3xl font-bold text-[#1A1A1A]">Welcome to the Test</h1>
-              <p className="text-[#6C757D] text-lg">
+              <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A]">Welcome to the Test</h1>
+              <p className="text-sm md:text-lg text-[#6C757D]">
                 Thank you for participating. You will be asked to complete a series of tasks and answer a few questions.
               </p>
-              <div className="bg-[#F8F9FA] p-6 rounded-2xl text-left space-y-3">
-                <div className="flex items-center gap-3 text-sm font-medium text-[#495057]">
-                  <Timer size={18} className="text-[#0066FF]" />
+              <div className="bg-[#F8F9FA] p-4 md:p-6 rounded-2xl text-left space-y-3">
+                <div className="flex items-center gap-3 text-xs md:text-sm font-medium text-[#495057]">
+                  <Timer size={16} className="text-[#0066FF]" />
                   Takes about 5-10 minutes
                 </div>
-                <div className="flex items-center gap-3 text-sm font-medium text-[#495057]">
-                  <MousePointer2 size={18} className="text-[#0066FF]" />
+                <div className="flex items-center gap-3 text-xs md:text-sm font-medium text-[#495057]">
+                  <MousePointer2 size={16} className="text-[#0066FF]" />
                   Your interactions will be recorded
                 </div>
               </div>
               <button 
                 onClick={handleStart}
-                className="w-full py-4 bg-[#0066FF] text-white rounded-2xl font-bold text-lg hover:bg-[#0052CC] transition-all shadow-lg shadow-blue-100"
+                className="w-full py-3 md:py-4 bg-[#0066FF] text-white rounded-2xl font-bold text-base md:text-lg hover:bg-[#0052CC] transition-all shadow-lg shadow-blue-100"
               >
                 Get Started
               </button>
@@ -274,28 +274,28 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
           )}
 
           {step === 'tasks' && (
-            <div className="flex flex-col h-[600px] relative">
+            <div className="flex flex-col h-full md:h-[600px] relative">
               {showMission && (
-                <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center p-8 animate-in fade-in duration-300">
+                <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
                   <div className="max-w-md w-full space-y-6 text-center">
-                    <div className="w-16 h-16 bg-blue-50 text-[#0066FF] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Target size={32} />
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-50 text-[#0066FF] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Target size={28} />
                     </div>
                     <div className="space-y-2">
-                      <h2 className="text-sm font-bold text-[#0066FF] uppercase tracking-widest">Mission {currentTaskIdx + 1}</h2>
-                      <h3 className="text-2xl font-bold text-[#1A1A1A]">{study.tasks[currentTaskIdx].title}</h3>
+                      <h2 className="text-[10px] md:text-sm font-bold text-[#0066FF] uppercase tracking-widest">Mission {currentTaskIdx + 1}</h2>
+                      <h3 className="text-xl md:text-2xl font-bold text-[#1A1A1A]">{study.tasks[currentTaskIdx].title}</h3>
                     </div>
-                    <p className="text-[#6C757D] text-lg leading-relaxed">
+                    <p className="text-sm md:text-lg text-[#6C757D] leading-relaxed">
                       {study.tasks[currentTaskIdx].instructions}
                     </p>
                     {study.tasks[currentTaskIdx].successPath && (
-                      <div className="p-3 bg-green-50 text-green-700 rounded-xl text-sm font-medium inline-block">
+                      <div className="p-2 md:p-3 bg-green-50 text-green-700 rounded-xl text-xs md:text-sm font-medium inline-block">
                         Goal: Reach {study.tasks[currentTaskIdx].successPath}
                       </div>
                     )}
                     <button 
                       onClick={() => setShowMission(false)}
-                      className="w-full py-4 bg-[#1A1A1A] text-white rounded-2xl font-bold text-lg hover:bg-black transition-all shadow-lg"
+                      className="w-full py-3 md:py-4 bg-[#1A1A1A] text-white rounded-2xl font-bold text-base md:text-lg hover:bg-black transition-all shadow-lg"
                     >
                       Begin Mission
                     </button>
@@ -303,17 +303,17 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
                 </div>
               )}
 
-              <div className="p-8 border-b border-[#E9ECEF] bg-[#F8F9FA] flex items-center justify-between">
-                <div>
-                  <h2 className="text-[10px] font-bold text-[#0066FF] uppercase tracking-widest mb-1">Current Mission</h2>
-                  <h3 className="text-lg font-bold text-[#1A1A1A]">{study.tasks[currentTaskIdx].title}</h3>
+              <div className="p-4 md:p-8 border-b border-[#E9ECEF] bg-[#F8F9FA] flex items-center justify-between flex-shrink-0">
+                <div className="min-w-0">
+                  <h2 className="text-[8px] md:text-[10px] font-bold text-[#0066FF] uppercase tracking-widest mb-1">Current Mission</h2>
+                  <h3 className="text-sm md:text-lg font-bold text-[#1A1A1A] truncate">{study.tasks[currentTaskIdx].title}</h3>
                 </div>
                 <button 
                   onClick={() => setShowMission(true)}
-                  className="p-2 text-[#6C757D] hover:bg-white rounded-lg transition-colors"
+                  className="p-2 text-[#6C757D] hover:bg-white rounded-lg transition-colors flex-shrink-0"
                   title="View Instructions"
                 >
-                  <AlertCircle size={20} />
+                  <AlertCircle size={18} />
                 </button>
               </div>
               
@@ -333,41 +333,36 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
                         className="w-full h-full border-none"
                         allowFullScreen
                       />
-                      {/* Overlay to capture clicks for heatmap while still allowing interaction? 
-                          Actually, iframes swallow clicks. To capture clicks, we'd need a transparent overlay,
-                          but that would block interaction with the prototype.
-                          For now, let's just show the prototype. If they click the "Complete" button, we record it.
-                      */}
-                      <div className="absolute bottom-6 right-6 z-10 flex flex-col gap-3 items-end">
-                        <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-[#E9ECEF] flex items-center gap-4 text-xs font-bold text-[#495057]">
+                      <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10 flex flex-col gap-2 md:gap-3 items-end">
+                        <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl shadow-xl border border-[#E9ECEF] flex items-center gap-3 md:gap-4 text-[10px] md:text-xs font-bold text-[#495057]">
                           <div className="flex items-center gap-1.5">
-                            <Timer size={14} className="text-[#0066FF]" />
+                            <Timer size={12} className="text-[#0066FF]" />
                             <span>{Math.floor((Date.now() - startTime) / 1000)}s</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <MousePointer2 size={14} className="text-[#0066FF]" />
+                            <MousePointer2 size={12} className="text-[#0066FF]" />
                             <span>{clicks.filter(c => c.taskId === study.tasks[currentTaskIdx].id).length} clicks</span>
                           </div>
                         </div>
                         <div className="flex gap-2">
                           <button 
-                            className="px-6 py-3 bg-white text-[#6C757D] border border-[#E9ECEF] rounded-2xl font-bold shadow-lg hover:bg-[#F8F9FA] transition-all"
+                            className="px-4 py-2 md:px-6 md:py-3 bg-white text-[#6C757D] border border-[#E9ECEF] rounded-xl md:rounded-2xl font-bold shadow-lg hover:bg-[#F8F9FA] transition-all text-xs md:text-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleTaskComplete(false);
                             }}
                           >
-                            Skip Mission
+                            Skip
                           </button>
                           <button 
-                            className="px-8 py-3 bg-[#0066FF] text-white rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all flex items-center gap-2"
+                            className="px-5 py-2 md:px-8 md:py-3 bg-[#0066FF] text-white rounded-xl md:rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all flex items-center gap-1.5 md:gap-2 text-xs md:text-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleTaskComplete(true);
                             }}
                           >
-                            <CheckCircle2 size={20} />
-                            Finish Mission
+                            <CheckCircle2 size={16} />
+                            Finish
                           </button>
                         </div>
                       </div>

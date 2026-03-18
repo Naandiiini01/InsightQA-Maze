@@ -86,40 +86,40 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Session Detail Modal */}
       {selectedResponse && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 md:p-8">
-          <div className="bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-3xl overflow-hidden flex flex-col shadow-2xl">
-            <div className="p-6 border-b border-[#E9ECEF] flex items-center justify-between bg-white">
-              <div className="flex items-center gap-6">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-2 md:p-8">
+          <div className="bg-white w-full max-w-6xl h-full md:h-auto md:max-h-[90vh] rounded-2xl md:rounded-3xl overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-4 md:p-6 border-b border-[#E9ECEF] flex flex-col md:flex-row md:items-center justify-between bg-white gap-4">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
                 <div>
-                  <h3 className="text-xl font-bold text-[#1A1A1A]">Session Detail</h3>
-                  <p className="text-sm text-[#6C757D]">Participant: {selectedResponse.participantId} • {new Date(selectedResponse.createdAt).toLocaleString()}</p>
+                  <h3 className="text-lg md:text-xl font-bold text-[#1A1A1A]">Session Detail</h3>
+                  <p className="text-xs md:text-sm text-[#6C757D] truncate">ID: {selectedResponse.participantId} • {new Date(selectedResponse.createdAt).toLocaleString()}</p>
                 </div>
                 
-                <div className="h-10 w-px bg-[#E9ECEF]" />
+                <div className="hidden md:block h-10 w-px bg-[#E9ECEF]" />
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3 md:gap-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-[#6C757D] uppercase tracking-widest">Filter Task:</span>
+                    <span className="text-[10px] font-bold text-[#6C757D] uppercase tracking-widest">Task:</span>
                     <select 
                       value={selectedTaskId}
                       onChange={(e) => setSelectedTaskId(e.target.value)}
-                      className="bg-[#F8F9FA] border border-[#E9ECEF] rounded-lg px-3 py-1.5 text-sm font-medium outline-none focus:ring-2 focus:ring-[#0066FF] transition-all"
+                      className="bg-[#F8F9FA] border border-[#E9ECEF] rounded-lg px-2 py-1 text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-[#0066FF] transition-all"
                     >
-                      <option value="all">All Tasks</option>
+                      <option value="all">All</option>
                       {study.tasks.map((t, i) => (
-                        <option key={t.id} value={t.id}>Task {i + 1}: {t.title}</option>
+                        <option key={t.id} value={t.id}>T{i + 1}: {t.title}</option>
                       ))}
                     </select>
                   </div>
                   
                   <button 
                     onClick={() => setShowHeatmap(!showHeatmap)}
-                    className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+                    className={`px-3 py-1 md:px-4 md:py-1.5 rounded-lg text-[10px] md:text-sm font-bold transition-all flex items-center gap-2 ${
                       showHeatmap ? "bg-[#0066FF] text-white" : "bg-[#F8F9FA] text-[#6C757D] border border-[#E9ECEF]"
                     }`}
                   >
-                    <Target size={16} />
-                    {showHeatmap ? 'Heatmap On' : 'Heatmap Off'}
+                    <Target size={14} />
+                    {showHeatmap ? 'Heatmap' : 'Heatmap'}
                   </button>
                 </div>
               </div>
@@ -128,15 +128,15 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
                   setSelectedResponse(null);
                   setSelectedTaskId('all');
                 }}
-                className="p-2 hover:bg-[#F8F9FA] rounded-full transition-colors"
+                className="absolute top-4 right-4 md:relative md:top-0 md:right-0 p-2 hover:bg-[#F8F9FA] rounded-full transition-colors"
               >
-                <ArrowLeft size={24} className="rotate-90" />
+                <ArrowLeft size={24} className="rotate-90 md:rotate-0" />
               </button>
             </div>
             
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
               {/* Prototype View with Heatmap Overlay */}
-              <div className="flex-1 bg-[#F8F9FA] relative overflow-hidden group">
+              <div className="flex-1 bg-[#F8F9FA] relative overflow-hidden group min-h-[300px] md:min-h-0">
                 {study.prototypeUrl ? (
                   <div className="w-full h-full relative">
                     <iframe 
@@ -243,17 +243,17 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
       </div>
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-[#1A1A1A]">{study.title}</h1>
-          <p className="text-[#6C757D] mt-1">Results for {responses.length} participants</p>
+        <div className="min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] truncate">{study.title}</h1>
+          <p className="text-sm md:text-base text-[#6C757D] mt-1">Results for {responses.length} participants</p>
         </div>
         <button 
           onClick={handleGenerateAI}
           disabled={analyzing || responses.length === 0}
-          className="flex items-center gap-2 px-6 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold hover:bg-black transition-all shadow-lg disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold hover:bg-black transition-all shadow-lg disabled:opacity-50 text-sm md:text-base"
         >
           <Sparkles size={20} className={analyzing ? "animate-pulse" : ""} />
-          {analyzing ? "Analyzing with AI..." : "Generate AI Insights"}
+          {analyzing ? "Analyzing..." : "AI Insights"}
         </button>
       </div>
 

@@ -102,13 +102,13 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-[#E9ECEF] shadow-xl overflow-hidden">
+    <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-[#E9ECEF] shadow-xl overflow-hidden mb-8">
       {/* Stepper */}
-      <div className="flex border-b border-[#E9ECEF]">
+      <div className="flex border-b border-[#E9ECEF] overflow-x-auto no-scrollbar">
         {[1, 2, 3].map((s) => (
           <div 
             key={s} 
-            className={`flex-1 py-4 text-center text-sm font-bold uppercase tracking-wider transition-colors ${
+            className={`flex-1 min-w-[100px] py-4 text-center text-[10px] md:text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${
               step === s ? 'text-[#0066FF] border-b-2 border-[#0066FF]' : 'text-[#ADB5BD]'
             }`}
           >
@@ -117,7 +117,7 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
         ))}
       </div>
 
-      <div className="p-8 min-h-[500px]">
+      <div className="p-4 md:p-8 min-h-[400px] md:min-h-[500px]">
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div>
@@ -164,7 +164,7 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
 
             <div>
               <label className="block text-sm font-bold text-[#495057] uppercase tracking-wide mb-4">Study Type</label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { id: 'prototype', label: 'Prototype Test', desc: 'Test interactive designs' },
                   { id: 'survey', label: 'Survey', desc: 'Collect user feedback' },
@@ -386,7 +386,7 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
           <button 
             onClick={() => setStep(Math.max(1, step - 1))}
             disabled={step === 1}
-            className="flex items-center gap-2 px-6 py-2 text-[#495057] font-bold disabled:opacity-30"
+            className="flex items-center gap-2 px-4 md:px-6 py-2 text-[#495057] font-bold disabled:opacity-30 text-sm md:text-base"
           >
             <ChevronLeft size={20} /> Back
           </button>
@@ -394,7 +394,7 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
           {step < 3 ? (
             <button 
               onClick={() => setStep(step + 1)}
-              className="flex items-center gap-2 px-8 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold hover:bg-black transition-all"
+              className="flex items-center gap-2 px-6 md:px-8 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold hover:bg-black transition-all text-sm md:text-base"
             >
               Continue <ChevronRight size={20} />
             </button>
@@ -402,7 +402,7 @@ export const StudyBuilder: React.FC<{ onComplete: () => void }> = ({ onComplete 
             <button 
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-8 py-3 bg-[#0066FF] text-white rounded-xl font-bold hover:bg-[#0052CC] transition-all shadow-lg shadow-blue-200 disabled:opacity-50"
+              className="flex items-center gap-2 px-6 md:px-8 py-3 bg-[#0066FF] text-white rounded-xl font-bold hover:bg-[#0052CC] transition-all shadow-lg shadow-blue-200 disabled:opacity-50 text-sm md:text-base"
             >
               {saving ? 'Saving...' : 'Finish & Save'} <Save size={20} />
             </button>
