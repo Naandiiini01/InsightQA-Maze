@@ -15,6 +15,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, user, onSignOut, activeTab, setActiveTab, onNewProject, onNewStudy }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <div className="flex h-screen bg-[#F8F9FA] text-[#1A1A1A] font-sans overflow-hidden">
@@ -42,6 +43,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onSignOut, activ
               onSignOut={onSignOut} 
               onNewProject={onNewProject}
               onNewStudy={onNewStudy}
+              isCollapsed={isCollapsed}
+              setIsCollapsed={setIsCollapsed}
             />
           </div>
         </>
