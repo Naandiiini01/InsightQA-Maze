@@ -119,7 +119,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         >
           {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          {!isCollapsed && "Collapse Menu"}
         </button>
 
         <button 
