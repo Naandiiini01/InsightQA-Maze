@@ -51,10 +51,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className={cn(
-      "h-full bg-white border-r border-[#E9ECEF] flex flex-col shadow-xl lg:shadow-none transition-all duration-300 relative",
-      isCollapsed ? "w-20" : "w-64 lg:w-72"
-    )}>
+    <aside 
+      onMouseEnter={() => setIsCollapsed(false)}
+      onMouseLeave={() => setIsCollapsed(true)}
+      className={cn(
+        "h-full bg-white border-r border-[#E9ECEF] flex flex-col shadow-xl lg:shadow-none transition-all duration-300 relative group",
+        isCollapsed ? "w-20" : "w-64 lg:w-72"
+      )}
+    >
       <div className={cn("p-6 flex-1 overflow-y-auto", isCollapsed && "px-4")}>
         <div className={cn("flex items-center gap-2 mb-8", isCollapsed && "justify-center")}>
           <div className="w-8 h-8 bg-[#0066FF] rounded-lg flex items-center justify-center flex-shrink-0">
@@ -110,17 +114,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div className={cn("mt-auto p-6 border-t border-[#E9ECEF] space-y-1", isCollapsed && "px-4")}>
-        <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? "Expand Menu" : "Collapse Menu"}
-          className={cn(
-            "w-full flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium text-[#495057] hover:bg-[#F8F9FA] transition-all hidden lg:flex",
-            isCollapsed ? "justify-center px-0" : "px-4"
-          )}
-        >
-          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
-
         <button 
           onClick={onSignOut}
           title={isCollapsed ? "Sign Out" : undefined}
