@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { doc, getDoc, addDoc, collection, updateDoc, query, where, getDocs } from 'firebase/firestore';
+import { db, auth, storage } from '../firebase';
+import { doc, getDoc, addDoc, collection, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Study, StudyResponse, Task, Question, Participant } from '../types';
 import { getTasks, getQuestions } from '../utils/studyUtils';
 import { 
@@ -16,7 +17,7 @@ import {
 
 export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void }> = ({ studyId, onComplete }) => {
   const [study, setStudy] = useState<Study | null>(null);
-  const [step, setStep] = useState<'signup' | 'intro' | 'tasks' | 'questions' | 'thanks'>('intro');
+  const [step, setStep] = useState<'signup' | 'consent' | 'intro' | 'tasks' | 'questions' | 'thanks'>('intro');
   const [participant, setParticipant] = useState<Partial<Participant> | null>(null);
   const [currentTaskIdx, setCurrentTaskIdx] = useState(0);
   const [showMission, setShowMission] = useState(true);
@@ -26,6 +27,7 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
   const [clicks, setClicks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [consentGiven, setConsentGiven] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -81,7 +83,7 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
       setParticipant({ id: docRef.id, ...pData });
       
       if (studyId) {
-        setStep('intro');
+        setStep('consent');
       } else {
         setStep('thanks');
       }
@@ -92,11 +94,37 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
     setLoading(false);
   };
 
+  const [recording, setRecording] = useState<MediaRecorder | null>(null);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await (navigator.mediaDevices as any).getDisplayMedia({ video: true, audio: true });
+      const recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
+      };
+      recorder.start();
+      setRecording(recorder);
+    } catch (err) {
+      console.error("Recording Error:", err);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (recording) {
+      recording.stop();
+      recording.stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
   const handleStart = async () => {
     setStep('tasks');
     setShowMission(true);
     setStartTime(Date.now());
     
+    await startRecording();
+
     if (participant?.id) {
       try {
         await updateDoc(doc(db, 'participants', participant.id), {
@@ -141,6 +169,16 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
     const successCount = results.filter(r => r.success).length;
     const completionRate = Math.round((successCount / getTasks(study!).length) * 100);
     
+    let recordingUrl = null;
+    if (recording) {
+      recording.stop();
+      recording.stream.getTracks().forEach(track => track.stop());
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const storageRef = ref(storage, `recordings/${participant?.id || 'anon'}-${Date.now()}.webm`);
+      await uploadBytes(storageRef, blob);
+      recordingUrl = await getDownloadURL(storageRef);
+    }
+
     const response: Partial<StudyResponse> = {
       studyId,
       ownerId: study!.ownerId,
@@ -151,6 +189,7 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
         timeTaken: totalTime,
         successRate: completionRate,
         clicks: clicks,
+        recordingUrl
       },
       createdAt: new Date().toISOString()
     };
@@ -250,6 +289,32 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
             </div>
           )}
 
+          {step === 'consent' && (
+            <div className="p-6 md:p-12 space-y-6 overflow-y-auto">
+              <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A]">Informed Consent</h1>
+              <p className="text-sm md:text-base text-[#6C757D]">
+                By participating in this study, you agree to have your interactions recorded. This includes your screen activity and any audio/video you choose to share. This data will be used solely for research purposes to improve the product experience.
+              </p>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="consent" 
+                  checked={consentGiven} 
+                  onChange={(e) => setConsentGiven(e.target.checked)}
+                  className="w-5 h-5 accent-[#0066FF]"
+                />
+                <label htmlFor="consent" className="text-sm font-bold text-[#495057]">I agree to the terms and conditions</label>
+              </div>
+              <button 
+                onClick={() => setStep('intro')}
+                disabled={!consentGiven}
+                className="w-full py-4 bg-[#0066FF] text-white rounded-xl font-bold text-lg hover:bg-[#0052CC] transition-all disabled:opacity-50"
+              >
+                Continue
+              </button>
+            </div>
+          )}
+
           {step === 'intro' && (
             <div className="p-6 md:p-12 text-center space-y-6 overflow-y-auto">
               <div className="w-16 h-16 md:w-20 md:h-20 bg-[#F0F7FF] text-[#0066FF] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -328,75 +393,79 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
               >
                 {/* Interactive Prototype View */}
                 <div className="absolute inset-0">
-                  {participant?.assignedVariantUrl ? (
-                    <div className="w-full h-full flex flex-col">
-                      <iframe 
-                        src={participant.assignedVariantUrl.includes('figma.com') 
-                          ? `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(participant.assignedVariantUrl)}`
-                          : participant.assignedVariantUrl
-                        }
-                        className="w-full h-full border-none"
-                        allowFullScreen
-                      />
-                      <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10 flex flex-col gap-2 md:gap-3 items-end">
-                        <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl shadow-xl border border-[#E9ECEF] flex items-center gap-3 md:gap-4 text-[10px] md:text-xs font-bold text-[#495057]">
-                          <div className="flex items-center gap-1.5">
-                            <Timer size={12} className="text-[#0066FF]" />
-                            <span>{Math.floor((Date.now() - startTime) / 1000)}s</span>
+                  {(() => {
+                    const task = getTasks(study!)[currentTaskIdx];
+                    const url = task.websiteUrl || participant?.assignedVariantUrl;
+                    return url ? (
+                      <div className="w-full h-full flex flex-col">
+                        <iframe 
+                          src={url.includes('figma.com') 
+                            ? `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`
+                            : url
+                          }
+                          className="w-full h-full border-none"
+                          allowFullScreen
+                        />
+                        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-10 flex flex-col gap-2 md:gap-3 items-end">
+                          <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl shadow-xl border border-[#E9ECEF] flex items-center gap-3 md:gap-4 text-[10px] md:text-xs font-bold text-[#495057]">
+                            <div className="flex items-center gap-1.5">
+                              <Timer size={12} className="text-[#0066FF]" />
+                              <span>{Math.floor((Date.now() - startTime) / 1000)}s</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <MousePointer2 size={12} className="text-[#0066FF]" />
+                              <span>{clicks.filter(c => c.taskId === task.id).length} clicks</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <MousePointer2 size={12} className="text-[#0066FF]" />
-                            <span>{clicks.filter(c => c.taskId === getTasks(study)[currentTaskIdx].id).length} clicks</span>
+                          <div className="flex gap-2">
+                            <button 
+                              className="px-4 py-2 md:px-6 md:py-3 bg-white text-[#6C757D] border border-[#E9ECEF] rounded-xl md:rounded-2xl font-bold shadow-lg hover:bg-[#F8F9FA] transition-all text-xs md:text-sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTaskComplete(false);
+                              }}
+                            >
+                              Skip
+                            </button>
+                            <button 
+                              className="px-5 py-2 md:px-8 md:py-3 bg-[#0066FF] text-white rounded-xl md:rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all flex items-center gap-1.5 md:gap-2 text-xs md:text-sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTaskComplete(true);
+                              }}
+                            >
+                              <CheckCircle2 size={16} />
+                              Finish
+                            </button>
                           </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button 
-                            className="px-4 py-2 md:px-6 md:py-3 bg-white text-[#6C757D] border border-[#E9ECEF] rounded-xl md:rounded-2xl font-bold shadow-lg hover:bg-[#F8F9FA] transition-all text-xs md:text-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleTaskComplete(false);
-                            }}
-                          >
-                            Skip
-                          </button>
-                          <button 
-                            className="px-5 py-2 md:px-8 md:py-3 bg-[#0066FF] text-white rounded-xl md:rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all flex items-center gap-1.5 md:gap-2 text-xs md:text-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleTaskComplete(true);
-                            }}
-                          >
-                            <CheckCircle2 size={16} />
-                            Finish
-                          </button>
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 border-4 border-dashed border-[#DEE2E6] rounded-3xl m-4">
-                      <AlertCircle size={48} className="text-[#ADB5BD] mb-4" />
-                      <h4 className="text-xl font-bold text-[#1A1A1A]">Interactive Prototype Area</h4>
-                      <p className="text-[#6C757D] mt-2">No prototype URL was provided for this study.</p>
-                      <button 
-                        className="mt-8 px-8 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTaskComplete(true);
-                        }}
-                      >
-                        I've completed the task
-                      </button>
-                      <button 
-                        className="mt-4 text-[#6C757D] font-medium hover:underline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTaskComplete(false);
-                        }}
-                      >
-                        I'm stuck / skip task
-                      </button>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 border-4 border-dashed border-[#DEE2E6] rounded-3xl m-4">
+                        <AlertCircle size={48} className="text-[#ADB5BD] mb-4" />
+                        <h4 className="text-xl font-bold text-[#1A1A1A]">Interactive Prototype Area</h4>
+                        <p className="text-[#6C757D] mt-2">No prototype or website URL was provided for this task.</p>
+                        <button 
+                          className="mt-8 px-8 py-3 bg-[#1A1A1A] text-white rounded-xl font-bold"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTaskComplete(true);
+                          }}
+                        >
+                          I've completed the task
+                        </button>
+                        <button 
+                          className="mt-4 text-[#6C757D] font-medium hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTaskComplete(false);
+                          }}
+                        >
+                          I'm stuck / skip task
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Click Indicators (Visual Feedback) - Only visible if not blocked by iframe */}

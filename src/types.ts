@@ -74,6 +74,7 @@ export interface Task {
   successPath?: string;
   imageUrl?: string;
   videoUrl?: string;
+  websiteUrl?: string;
   timer?: number;
   followUpQuestions?: Question[];
 }
@@ -114,6 +115,7 @@ export interface ResponseMetric {
   successRate: number;
   clicks: { x: number; y: number; timestamp: number; target?: string }[];
   dropOffStep?: number;
+  recordingUrl?: string;
 }
 
 export interface Participant {

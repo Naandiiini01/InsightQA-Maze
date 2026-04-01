@@ -4,6 +4,8 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Study, StudyResponse } from '../types';
 import { getTasks, getQuestions } from '../utils/studyUtils';
 import { generateStudyInsights } from '../services/geminiService';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { 
   BarChart, 
   Bar, 
@@ -58,6 +60,29 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
     const insights = await generateStudyInsights(study, responses);
     setAiInsights(insights);
     setAnalyzing(false);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(`Study Report: ${study.title}`, 14, 20);
+    doc.setFontSize(12);
+    doc.text(`Total Participants: ${responses.length}`, 14, 30);
+    
+    const tableData = responses.map(r => [
+      r.participantId, 
+      `${r.metrics.successRate.toFixed(0)}%`, 
+      `${r.metrics.timeTaken.toFixed(1)}s`, 
+      new Date(r.createdAt).toLocaleDateString()
+    ]);
+    
+    (doc as any).autoTable({
+      head: [['Participant', 'Success Rate', 'Time Taken', 'Date']],
+      body: tableData,
+      startY: 40
+    });
+    
+    doc.save(`${study.title.replace(/\s+/g, '_')}_report.pdf`);
   };
 
   const successData = [
@@ -238,7 +263,7 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
         <button onClick={onBack} className="flex items-center gap-2 text-[#6C757D] hover:text-[#1A1A1A] font-medium transition-colors">
           <ArrowLeft size={20} /> Back to Studies
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E9ECEF] rounded-lg text-sm font-bold hover:bg-[#F8F9FA] transition-all">
+        <button onClick={exportToPDF} className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E9ECEF] rounded-lg text-sm font-bold hover:bg-[#F8F9FA] transition-all">
           <Download size={18} /> Export PDF
         </button>
       </div>

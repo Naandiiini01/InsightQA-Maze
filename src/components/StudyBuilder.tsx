@@ -112,6 +112,7 @@ export const StudyBuilder: React.FC<{ onComplete: () => void, initialData?: Temp
           <div className="space-y-4">
             <input type="text" placeholder="Task title" value={block.title} onChange={(e) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, title: e.target.value } : b))} className="w-full text-2xl font-bold outline-none" />
             <textarea placeholder="Instructions" value={block.instructions} onChange={(e) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, instructions: e.target.value } : b))} className="w-full p-4 bg-[#F8F9FA] rounded-xl" />
+            <input type="text" placeholder="Website URL (optional)" value={block.websiteUrl || ''} onChange={(e) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, websiteUrl: e.target.value } : b))} className="w-full p-4 bg-[#F8F9FA] rounded-xl" />
             <div className="grid grid-cols-2 gap-4">
               <MediaUploader type="image" currentUrl={block.imageUrl} onUpload={(url) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, imageUrl: url } : b))} />
               <MediaUploader type="video" currentUrl={block.videoUrl} onUpload={(url) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, videoUrl: url } : b))} />
