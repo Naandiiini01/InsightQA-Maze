@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, where } from 'firebase/firestore';
 import { Study } from '../types';
+import { getTasks, getQuestions } from '../utils/studyUtils';
 import { getShareableUrl, copyToClipboard } from '../utils/url';
 import { 
   MoreVertical, 
@@ -138,7 +139,7 @@ export const StudyList: React.FC<{
               
               <h3 className="text-lg font-bold text-[#1A1A1A] mb-1 group-hover:text-[#0066FF] transition-colors">{study.title}</h3>
               <p className="text-sm text-[#6C757D] mb-6 line-clamp-2">
-                {study.tasks.length} tasks • {study.questions.length} questions • {study.type}
+                {getTasks(study).length} tasks • {getQuestions(study).length} questions • {study.type}
               </p>
 
               <div className="flex items-center justify-between pt-4 border-t border-[#F8F9FA]">

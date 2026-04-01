@@ -176,11 +176,8 @@ export const CreateStudyModal: React.FC<CreateStudyModalProps> = ({
               {studyTypes.map((type) => (
                 <button
                   key={type.id}
-                  onClick={() => type.id === 'unmoderated' ? setStep('SELECT_TEMPLATE') : null}
-                  className={cn(
-                    "group p-8 text-left rounded-3xl border-2 border-[#E9ECEF] hover:border-[#0066FF] hover:shadow-xl transition-all relative flex flex-col h-full",
-                    type.id !== 'unmoderated' && "opacity-60 cursor-not-allowed"
-                  )}
+                  onClick={() => setStep('SELECT_TEMPLATE')}
+                  className="group p-8 text-left rounded-3xl border-2 border-[#E9ECEF] hover:border-[#0066FF] hover:shadow-xl transition-all relative flex flex-col h-full"
                 >
                   {type.badge && (
                     <span className="absolute top-4 right-4 bg-[#F8F9FA] border border-[#E9ECEF] text-[10px] font-bold px-2 py-0.5 rounded-full text-[#6C757D]">
@@ -192,11 +189,6 @@ export const CreateStudyModal: React.FC<CreateStudyModalProps> = ({
                   </div>
                   <h3 className="text-xl font-bold text-[#1A1A1A] mb-3">{type.title}</h3>
                   <p className="text-sm text-[#6C757D] leading-relaxed mb-6 flex-1">{type.description}</p>
-                  {type.id === 'unmoderated' && (
-                    <div className="flex items-center gap-2 text-[#0066FF] font-bold text-sm">
-                      Get started <ChevronRight size={16} />
-                    </div>
-                  )}
                 </button>
               ))}
             </div>

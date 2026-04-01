@@ -29,22 +29,67 @@ export interface Project {
 export type StudyType = 'prototype' | 'survey' | 'website' | 'task';
 export type StudyStatus = 'draft' | 'active' | 'completed';
 
+export interface WelcomeBlock {
+  type: 'welcome';
+  id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  videoUrl?: string;
+}
+
+export interface ThankYouBlock {
+  type: 'thankyou';
+  id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  videoUrl?: string;
+}
+
+export interface IntroBlock {
+  type: 'intro';
+  id: string;
+  title: string;
+  description: string;
+  researcherNote?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+}
+
+export interface ContextBlock {
+  type: 'context';
+  id: string;
+  scenarioText: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  deviceInstructions?: string;
+}
+
 export interface Task {
+  type: 'task';
   id: string;
   title: string;
   instructions: string;
-  successPath?: string; // e.g., "checkout-button-clicked"
+  successPath?: string;
   imageUrl?: string;
+  videoUrl?: string;
   timer?: number;
+  followUpQuestions?: Question[];
 }
 
 export interface Question {
+  type: 'question';
   id: string;
   text: string;
-  type: 'mcq' | 'open-ended';
+  questionType: 'mcq' | 'open-ended';
   options?: string[];
   required: boolean;
+  imageUrl?: string;
+  videoUrl?: string;
 }
+
+export type Block = WelcomeBlock | IntroBlock | ContextBlock | Task | Question | ThankYouBlock;
 
 export interface Study {
   id: string;
@@ -53,14 +98,14 @@ export interface Study {
   title: string;
   type: StudyType;
   status: StudyStatus;
-  tasks: Task[];
-  questions: Question[];
+  blocks: Block[];
   config: {
     allowCamera?: boolean;
     allowMicrophone?: boolean;
     showTimer?: boolean;
+    deviceType?: 'mobile' | 'tablet' | 'desktop' | 'laptop' | 'responsive';
   };
-  prototypeUrl?: string;
+  prototypeUrls?: string[];
   createdAt: string;
 }
 
@@ -78,6 +123,7 @@ export interface Participant {
   ownerId: string;
   status: 'invited' | 'completed' | 'active';
   assignedStudyId?: string;
+  assignedVariantUrl?: string;
   completionRate: number;
   timeTaken?: number; // average or total
   createdAt: string;
@@ -89,6 +135,7 @@ export interface StudyResponse {
   studyId: string;
   ownerId: string;
   participantId: string;
+  variantUrl?: string;
   results: { taskId: string; success: boolean; time: number; answer?: string }[];
   metrics: ResponseMetric;
   createdAt: string;

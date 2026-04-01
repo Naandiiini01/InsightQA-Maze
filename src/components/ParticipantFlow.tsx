@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { doc, getDoc, addDoc, collection, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { Study, StudyResponse, Task, Question, Participant } from '../types';
+import { getTasks, getQuestions } from '../utils/studyUtils';
 import { 
   Play, 
   CheckCircle2, 
@@ -69,6 +70,9 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
         ownerId: study?.ownerId || 'system', // Default if no study
         status: studyId ? 'active' : 'completed', // Completed if it's just a general signup
         assignedStudyId: studyId || null,
+        assignedVariantUrl: study?.prototypeUrls && study.prototypeUrls.length > 0
+          ? study.prototypeUrls[Math.floor(Math.random() * study.prototypeUrls.length)]
+          : undefined,
         completionRate: 0,
         createdAt: new Date().toISOString()
       };
@@ -107,10 +111,10 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
 
   const handleTaskComplete = (success: boolean) => {
     const timeTaken = (Date.now() - startTime) / 1000;
-    const task = study!.tasks[currentTaskIdx];
+    const task = getTasks(study!)[currentTaskIdx];
     setResults([...results, { taskId: task.id, success, time: timeTaken }]);
     
-    if (currentTaskIdx < study!.tasks.length - 1) {
+    if (currentTaskIdx < getTasks(study!).length - 1) {
       setCurrentTaskIdx(currentTaskIdx + 1);
       setShowMission(true);
       setStartTime(Date.now());
@@ -120,12 +124,12 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
   };
 
   const handleQuestionSubmit = (answer: string) => {
-    const question = study!.questions[currentQuestionIdx];
+    const question = getQuestions(study!)[currentQuestionIdx];
     const newResults = [...results];
     newResults.push({ questionId: question.id, answer });
     setResults(newResults);
 
-    if (currentQuestionIdx < study!.questions.length - 1) {
+    if (currentQuestionIdx < getQuestions(study!).length - 1) {
       setCurrentQuestionIdx(currentQuestionIdx + 1);
     } else {
       submitResponse();
@@ -135,12 +139,13 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
   const submitResponse = async () => {
     const totalTime = results.reduce((acc, r) => acc + (r.time || 0), 0);
     const successCount = results.filter(r => r.success).length;
-    const completionRate = Math.round((successCount / study!.tasks.length) * 100);
+    const completionRate = Math.round((successCount / getTasks(study!).length) * 100);
     
     const response: Partial<StudyResponse> = {
       studyId,
       ownerId: study!.ownerId,
       participantId: participant?.id || 'anon-' + Math.random().toString(36).substr(2, 5),
+      variantUrl: participant?.assignedVariantUrl,
       results,
       metrics: {
         timeTaken: totalTime,
@@ -191,8 +196,8 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
           <span className="font-bold text-[#1A1A1A] truncate text-sm md:text-base">{study.title}</span>
         </div>
         <div className="text-[10px] md:text-sm font-medium text-[#6C757D] whitespace-nowrap ml-2">
-          {step === 'tasks' && `Task ${currentTaskIdx + 1}/${study.tasks.length}`}
-          {step === 'questions' && `Q ${currentQuestionIdx + 1}/${study.questions.length}`}
+          {step === 'tasks' && `Task ${currentTaskIdx + 1}/${getTasks(study).length}`}
+          {step === 'questions' && `Q ${currentQuestionIdx + 1}/${getQuestions(study).length}`}
         </div>
       </header>
 
@@ -283,14 +288,14 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
                     </div>
                     <div className="space-y-2">
                       <h2 className="text-[10px] md:text-sm font-bold text-[#0066FF] uppercase tracking-widest">Mission {currentTaskIdx + 1}</h2>
-                      <h3 className="text-xl md:text-2xl font-bold text-[#1A1A1A]">{study.tasks[currentTaskIdx].title}</h3>
+                      <h3 className="text-xl md:text-2xl font-bold text-[#1A1A1A]">{getTasks(study)[currentTaskIdx].title}</h3>
                     </div>
                     <p className="text-sm md:text-lg text-[#6C757D] leading-relaxed">
-                      {study.tasks[currentTaskIdx].instructions}
+                      {getTasks(study)[currentTaskIdx].instructions}
                     </p>
-                    {study.tasks[currentTaskIdx].successPath && (
+                    {getTasks(study)[currentTaskIdx].successPath && (
                       <div className="p-2 md:p-3 bg-green-50 text-green-700 rounded-xl text-xs md:text-sm font-medium inline-block">
-                        Goal: Reach {study.tasks[currentTaskIdx].successPath}
+                        Goal: Reach {getTasks(study)[currentTaskIdx].successPath}
                       </div>
                     )}
                     <button 
@@ -306,7 +311,7 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
               <div className="p-4 md:p-8 border-b border-[#E9ECEF] bg-[#F8F9FA] flex items-center justify-between flex-shrink-0">
                 <div className="min-w-0">
                   <h2 className="text-[8px] md:text-[10px] font-bold text-[#0066FF] uppercase tracking-widest mb-1">Current Mission</h2>
-                  <h3 className="text-sm md:text-lg font-bold text-[#1A1A1A] truncate">{study.tasks[currentTaskIdx].title}</h3>
+                  <h3 className="text-sm md:text-lg font-bold text-[#1A1A1A] truncate">{getTasks(study)[currentTaskIdx].title}</h3>
                 </div>
                 <button 
                   onClick={() => setShowMission(true)}
@@ -323,12 +328,12 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
               >
                 {/* Interactive Prototype View */}
                 <div className="absolute inset-0">
-                  {study.prototypeUrl ? (
+                  {participant?.assignedVariantUrl ? (
                     <div className="w-full h-full flex flex-col">
                       <iframe 
-                        src={study.prototypeUrl.includes('figma.com') 
-                          ? `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(study.prototypeUrl)}`
-                          : study.prototypeUrl
+                        src={participant.assignedVariantUrl.includes('figma.com') 
+                          ? `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(participant.assignedVariantUrl)}`
+                          : participant.assignedVariantUrl
                         }
                         className="w-full h-full border-none"
                         allowFullScreen
@@ -341,7 +346,7 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
                           </div>
                           <div className="flex items-center gap-1.5">
                             <MousePointer2 size={12} className="text-[#0066FF]" />
-                            <span>{clicks.filter(c => c.taskId === study.tasks[currentTaskIdx].id).length} clicks</span>
+                            <span>{clicks.filter(c => c.taskId === getTasks(study)[currentTaskIdx].id).length} clicks</span>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -410,12 +415,12 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
             <div className="p-12 space-y-8">
               <div className="space-y-2">
                 <span className="text-sm font-bold text-[#0066FF] uppercase tracking-widest">Feedback</span>
-                <h2 className="text-2xl font-bold text-[#1A1A1A]">{study.questions[currentQuestionIdx].text}</h2>
+                <h2 className="text-2xl font-bold text-[#1A1A1A]">{getQuestions(study)[currentQuestionIdx].text}</h2>
               </div>
 
-              {study.questions[currentQuestionIdx].type === 'mcq' ? (
+              {getQuestions(study)[currentQuestionIdx].questionType === 'mcq' ? (
                 <div className="space-y-3">
-                  {study.questions[currentQuestionIdx].options?.map((opt, i) => (
+                  {getQuestions(study)[currentQuestionIdx].options?.map((opt, i) => (
                     <button 
                       key={i}
                       onClick={() => handleQuestionSubmit(opt)}

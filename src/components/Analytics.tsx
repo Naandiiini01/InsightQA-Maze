@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Study, StudyResponse } from '../types';
+import { getTasks, getQuestions } from '../utils/studyUtils';
 import { generateStudyInsights } from '../services/geminiService';
 import { 
   BarChart, 
@@ -64,8 +65,8 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
     { name: 'Failure', value: 100 - (responses.reduce((acc, r) => acc + r.metrics.successRate, 0) / (responses.length || 1)) }
   ];
 
-  const taskData = study.tasks.map(task => {
-    const taskResponses = responses.flatMap(r => r.results).filter(res => res.taskId === task.id);
+  const taskData = getTasks(study).map(task => {
+    const taskResponses = responses.flatMap(r => r.results || []).filter(res => res.taskId === task.id);
     const successCount = taskResponses.filter(res => res.success).length;
     return {
       name: task.title.substring(0, 15) + '...',
@@ -106,7 +107,7 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
                       className="bg-[#F8F9FA] border border-[#E9ECEF] rounded-lg px-2 py-1 text-xs md:text-sm font-medium outline-none focus:ring-2 focus:ring-[#0066FF] transition-all"
                     >
                       <option value="all">All</option>
-                      {study.tasks.map((t, i) => (
+                      {getTasks(study).map((t, i) => (
                         <option key={t.id} value={t.id}>T{i + 1}: {t.title}</option>
                       ))}
                     </select>
@@ -137,12 +138,12 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
               {/* Prototype View with Heatmap Overlay */}
               <div className="flex-1 bg-[#F8F9FA] relative overflow-hidden group min-h-[300px] md:min-h-0">
-                {study.prototypeUrl ? (
+                {selectedResponse.variantUrl ? (
                   <div className="w-full h-full relative">
                     <iframe 
-                      src={study.prototypeUrl.includes('figma.com') 
-                        ? `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(study.prototypeUrl)}`
-                        : study.prototypeUrl
+                      src={selectedResponse.variantUrl.includes('figma.com') 
+                        ? `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(selectedResponse.variantUrl)}`
+                        : selectedResponse.variantUrl
                       }
                       className="w-full h-full border-none pointer-events-none"
                     />
@@ -166,7 +167,7 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
                   </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[#ADB5BD]">
-                    No prototype URL available
+                    No variant URL available for this session
                   </div>
                 )}
               </div>
@@ -194,8 +195,8 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
                 <div>
                   <h4 className="text-xs font-bold text-[#6C757D] uppercase tracking-widest mb-4">Task Results</h4>
                   <div className="space-y-3">
-                    {selectedResponse.results.filter(r => r.taskId).map((res, i) => {
-                      const task = study.tasks.find(t => t.id === res.taskId);
+                    {selectedResponse.results?.filter(r => r.taskId).map((res, i) => {
+                      const task = getTasks(study).find(t => t.id === res.taskId);
                       return (
                         <div key={i} className="p-3 bg-[#F8F9FA] rounded-xl border border-[#E9ECEF]">
                           <div className="flex items-center justify-between mb-1">
@@ -217,8 +218,8 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
                 <div>
                   <h4 className="text-xs font-bold text-[#6C757D] uppercase tracking-widest mb-4">Question Answers</h4>
                   <div className="space-y-3">
-                    {selectedResponse.results.filter((r: any) => r.questionId).map((res: any, i: number) => {
-                      const question = study.questions.find(q => q.id === res.questionId);
+                    {selectedResponse.results?.filter((r: any) => r.questionId).map((res: any, i: number) => {
+                      const question = getQuestions(study).find(q => q.id === res.questionId);
                       return (
                         <div key={i} className="space-y-1">
                           <p className="text-xs font-bold text-[#1A1A1A]">{question?.text}</p>
@@ -275,7 +276,7 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
           <p className="text-3xl font-bold">
             {(responses.reduce((acc, r) => acc + r.metrics.successRate, 0) / (responses.length || 1)).toFixed(1)}%
           </p>
-          <p className="text-xs text-[#6C757D] mt-1">Based on {study.tasks.length} tasks</p>
+          <p className="text-xs text-[#6C757D] mt-1">Based on {getTasks(study).length} tasks</p>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-[#E9ECEF] shadow-sm">
           <div className="flex items-center gap-3 mb-4">

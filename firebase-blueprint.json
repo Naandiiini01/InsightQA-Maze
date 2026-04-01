@@ -51,7 +51,7 @@
         "tasks": { "type": "array" },
         "questions": { "type": "array" },
         "config": { "type": "object" },
-        "prototypeUrl": { "type": "string" },
+        "prototypeUrls": { "type": "array", "items": { "type": "string" } },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "type", "status", "ownerId"]
@@ -63,6 +63,7 @@
       "properties": {
         "studyId": { "type": "string" },
         "participantId": { "type": "string" },
+        "variantUrl": { "type": "string" },
         "results": { "type": "array" },
         "metrics": { "type": "object" },
         "createdAt": { "type": "string", "format": "date-time" }
@@ -79,6 +80,7 @@
         "ownerId": { "type": "string" },
         "status": { "type": "string", "enum": ["invited", "completed", "active"] },
         "assignedStudyId": { "type": "string" },
+        "assignedVariantUrl": { "type": "string" },
         "completionRate": { "type": "number" },
         "timeTaken": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" },

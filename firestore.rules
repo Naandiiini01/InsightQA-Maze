@@ -41,31 +41,32 @@ service cloud.firestore {
     }
 
     function isValidStudy(data) {
-      return data.keys().hasOnly(['projectId', 'ownerId', 'title', 'type', 'status', 'tasks', 'questions', 'config', 'prototypeUrl', 'createdAt']) &&
+      return data.keys().hasOnly(['projectId', 'ownerId', 'title', 'type', 'status', 'blocks', 'config', 'prototypeUrls', 'createdAt']) &&
              (data.projectId == null || data.projectId is string) && 
              data.ownerId is string &&
              data.title is string &&
              data.type in ['prototype', 'survey', 'website', 'task'] &&
              data.status in ['draft', 'active', 'completed'] &&
-             data.tasks is list &&
-             data.questions is list &&
+             data.blocks is list &&
              data.config is map &&
-             data.prototypeUrl is string &&
+             data.prototypeUrls is list &&
              data.createdAt is string;
     }
 
     function isValidResponse(data) {
-      return data.keys().hasOnly(['studyId', 'ownerId', 'participantId', 'results', 'metrics', 'createdAt']) &&
+      return data.keys().hasOnly(['studyId', 'ownerId', 'participantId', 'variantUrl', 'results', 'metrics', 'createdAt']) &&
              data.studyId is string &&
-             data.ownerId is string;
+             data.ownerId is string &&
+             (data.variantUrl == null || data.variantUrl is string);
     }
 
     function isValidParticipant(data) {
       return data.keys().hasAll(['email', 'ownerId', 'status']) &&
-             data.keys().hasOnly(['email', 'name', 'ownerId', 'status', 'assignedStudyId', 'completionRate', 'timeTaken', 'createdAt', 'lastActive']) &&
+             data.keys().hasOnly(['email', 'name', 'ownerId', 'status', 'assignedStudyId', 'assignedVariantUrl', 'completionRate', 'timeTaken', 'createdAt', 'lastActive']) &&
              data.email is string &&
              data.ownerId is string &&
-             data.status in ['invited', 'completed', 'active'];
+             data.status in ['invited', 'completed', 'active'] &&
+             (data.assignedVariantUrl == null || data.assignedVariantUrl is string);
     }
 
     // ===============================================================
