@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { db, auth } from '../firebase';
 import { collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../utils/firestore';
-import { StudyType, Project, Block, Study } from '../types';
+import { StudyType, Project, Block, Study, Question } from '../types';
 import { TemplateData } from '../data/templates';
 import { 
   Save, 
@@ -117,12 +117,55 @@ export const StudyBuilder: React.FC<{ onComplete: () => void, initialData?: Temp
               <MediaUploader type="image" currentUrl={block.imageUrl} onUpload={(url) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, imageUrl: url } : b))} />
               <MediaUploader type="video" currentUrl={block.videoUrl} onUpload={(url) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, videoUrl: url } : b))} />
             </div>
+            <div className="space-y-2">
+                <label className="text-xs font-bold text-[#6C757D] uppercase">Follow-up Questions</label>
+                {block.followUpQuestions?.map((q, idx) => (
+                    <input key={idx} type="text" value={q.text} onChange={(e) => {
+                        const newQuestions = [...(block.followUpQuestions || [])];
+                        newQuestions[idx] = { ...newQuestions[idx], text: e.target.value };
+                        setBlocks(blocks.map(b => b.id === block.id ? { ...b, followUpQuestions: newQuestions } : b));
+                    }} className="w-full p-2 border border-[#E9ECEF] rounded-lg text-sm" />
+                ))}
+                <button onClick={() => {
+                    const newQuestion: Question = { id: Math.random().toString(36).substr(2, 9), type: 'question', text: '', questionType: 'open-ended', required: false };
+                    const newQuestions = [...(block.followUpQuestions || []), newQuestion];
+                    setBlocks(blocks.map(b => b.id === block.id ? { ...b, followUpQuestions: newQuestions } : b));
+                }} className="w-full p-2 text-xs bg-[#F8F9FA] border rounded hover:bg-[#E9ECEF]">
+                    + Add Follow-up Question
+                </button>
+            </div>
           </div>
         );
       case 'question':
         return (
           <div className="space-y-4">
             <input type="text" placeholder="Question text" value={block.text} onChange={(e) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, text: e.target.value } : b))} className="w-full text-2xl font-bold outline-none" />
+            <select value={block.questionType} onChange={(e) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, questionType: e.target.value as 'mcq' | 'open-ended' } : b))} className="w-full p-2 border border-[#E9ECEF] rounded-lg text-sm">
+                <option value="mcq">Multiple Choice</option>
+                <option value="open-ended">Open Ended</option>
+            </select>
+            {block.questionType === 'mcq' && (
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-[#6C757D] uppercase">Options</label>
+                    {block.options?.map((opt, idx) => (
+                        <input key={idx} type="text" value={opt} onChange={(e) => {
+                            const newOptions = [...(block.options || [])];
+                            newOptions[idx] = e.target.value;
+                            setBlocks(blocks.map(b => b.id === block.id ? { ...b, options: newOptions } : b));
+                        }} className="w-full p-2 border border-[#E9ECEF] rounded-lg text-sm" />
+                    ))}
+                    <button onClick={() => {
+                        const newOptions = [...(block.options || []), 'New Option'];
+                        setBlocks(blocks.map(b => b.id === block.id ? { ...b, options: newOptions } : b));
+                    }} className="w-full p-2 text-xs bg-[#F8F9FA] border rounded hover:bg-[#E9ECEF]">
+                        + Add Option
+                    </button>
+                </div>
+            )}
+            <label className="flex items-center gap-2">
+                <input type="checkbox" checked={block.required} onChange={(e) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, required: e.target.checked } : b))} />
+                Required
+            </label>
             <div className="grid grid-cols-2 gap-4">
               <MediaUploader type="image" currentUrl={block.imageUrl} onUpload={(url) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, imageUrl: url } : b))} />
               <MediaUploader type="video" currentUrl={block.videoUrl} onUpload={(url) => setBlocks(blocks.map(b => b.id === block.id ? { ...b, videoUrl: url } : b))} />

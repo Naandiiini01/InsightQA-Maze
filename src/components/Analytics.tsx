@@ -71,8 +71,8 @@ export const Analytics: React.FC<{ study: Study, onBack: () => void }> = ({ stud
     
     const tableData = responses.map(r => [
       r.participantId, 
-      `${r.metrics.successRate.toFixed(0)}%`, 
-      `${r.metrics.timeTaken.toFixed(1)}s`, 
+      `${(r.metrics?.successRate || 0).toFixed(0)}%`, 
+      `${(r.metrics?.timeTaken || 0).toFixed(1)}s`, 
       new Date(r.createdAt).toLocaleDateString()
     ]);
     

@@ -28,6 +28,9 @@ export const StudyPreview: React.FC<StudyPreviewProps> = ({ blocks, prototypeUrl
   return (
     <div className="h-full bg-white rounded-2xl border border-[#E9ECEF] shadow-sm flex flex-col overflow-hidden">
       <div className="p-4 border-b border-[#E9ECEF] font-bold text-sm">Preview: {title}</div>
+      <div className="bg-amber-50 text-amber-800 text-xs p-2 text-center border-b border-amber-100">
+        Note: This is a structural preview. Participant flow, recording, and timers are not simulated.
+      </div>
       <div className="flex-1 p-6 overflow-y-auto">
         {currentBlock ? (
           <div className="space-y-4">

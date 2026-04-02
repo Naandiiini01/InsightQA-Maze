@@ -96,6 +96,7 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
 
   const [recording, setRecording] = useState<MediaRecorder | null>(null);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
 
   const startRecording = async () => {
     try {
@@ -106,8 +107,10 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
       };
       recorder.start();
       setRecording(recorder);
+      setRecordingError(null);
     } catch (err) {
       console.error("Recording Error:", err);
+      setRecordingError("Screen recording failed. You can still complete the study, but your interactions won't be recorded.");
     }
   };
 
@@ -378,13 +381,20 @@ export const ParticipantFlow: React.FC<{ studyId: string, onComplete: () => void
                   <h2 className="text-[8px] md:text-[10px] font-bold text-[#0066FF] uppercase tracking-widest mb-1">Current Mission</h2>
                   <h3 className="text-sm md:text-lg font-bold text-[#1A1A1A] truncate">{getTasks(study)[currentTaskIdx].title}</h3>
                 </div>
-                <button 
-                  onClick={() => setShowMission(true)}
-                  className="p-2 text-[#6C757D] hover:bg-white rounded-lg transition-colors flex-shrink-0"
-                  title="View Instructions"
-                >
-                  <AlertCircle size={18} />
-                </button>
+                <div className="flex items-center gap-2">
+                  {recordingError && (
+                    <div className="text-xs text-red-500 font-medium bg-red-50 p-2 rounded-lg">
+                      Recording failed
+                    </div>
+                  )}
+                  <button 
+                    onClick={() => setShowMission(true)}
+                    className="p-2 text-[#6C757D] hover:bg-white rounded-lg transition-colors flex-shrink-0"
+                    title="View Instructions"
+                  >
+                    <AlertCircle size={18} />
+                  </button>
+                </div>
               </div>
               
               <div 
